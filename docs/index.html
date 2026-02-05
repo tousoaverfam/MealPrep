@@ -7,6 +7,26 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="./style.css" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Configuração Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZ4D0oRlCIwEEjRjPA2RauyxvIBFhzS-U",
+      authDomain: "testemeals.firebaseapp.com",
+      projectId: "testemeals",
+      storageBucket: "testemeals.appspot.com",
+      messagingSenderId: "467182854778",
+      appId: "1:467182854778:web:ebd40e0426d1c053b611c3"
+    };
+
+    // Inicializa Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
 </head>
 
 <body>
