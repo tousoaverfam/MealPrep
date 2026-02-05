@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  /* ======================
-     Navegação
-  ===================== */
+  // ======================
+  // Navegação
+  // ======================
   window.navigate = function(target) {
     document.querySelectorAll(".screen").forEach(screen => {
       screen.classList.remove("active");
@@ -12,9 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 50);
   }
 
-  /* ======================
-     Dados
-  ===================== */
+  // ======================
+  // Dados locais
+  // ======================
   const meals = [
     "Frango com arroz",
     "Massa à bolonhesa",
@@ -38,20 +38,19 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentIndex = 0;
   let currentDay = 0;
 
-  /* ======================
-     Elementos
-  ===================== */
+  // ======================
+  // Elementos
+  // ======================
   const mealName = document.getElementById("mealName");
   const currentDayDisplay = document.getElementById("currentDayDisplay");
   const buttons = document.getElementById("buttons");
 
-  /* ======================
-     Helpers
-  ===================== */
+  // ======================
+  // Helpers UI
+  // ======================
   function highlightDay() {
     for (let i = 0; i < 7; i++) {
-      document
-        .getElementById(`day-row-${i}`)
+      document.getElementById(`day-row-${i}`)
         .classList.toggle("active", i === currentDay);
     }
   }
@@ -73,13 +72,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   showMeal();
 
-  /* ======================
-     Escolha
-  ===================== */
+  // ======================
+  // Escolha refeição
+  // ======================
   window.chooseMeal = function(isLike) {
+    if (currentDay >= 7) return;
+
     if (isLike) {
-      document.getElementById(`day-${currentDay}`).textContent =
-        meals[currentIndex];
+      const meal = meals[currentIndex];
+      const dayId = currentDay;
+
+      document.getElementById(`day-${dayId}`).textContent = meal;
+
+      // Guardar no Firebase
+      db.collection("testemeals").doc("currentWeek").set({
+        [`day${dayId}`]: meal
+      }, { merge: true });
+
       currentDay++;
     }
 
@@ -87,9 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
     showMeal();
   }
 
-  /* ======================
-     Limpar semana
-  ===================== */
+  // ======================
+  // Limpar semana
+  // ======================
   window.clearWeek = function() {
     if (!confirm("Tens a certeza de que queres limpar todas as refeições?"))
       return;
@@ -102,6 +111,9 @@ document.addEventListener("DOMContentLoaded", () => {
     currentIndex = 0;
     currentDay = 0;
     showMeal();
+
+    // Limpar Firebase
+    db.collection("testemeals").doc("currentWeek").set({}, { merge: true });
   }
 
 });
