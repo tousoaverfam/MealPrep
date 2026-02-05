@@ -1,69 +1,93 @@
-<div id="app">
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- HOME -->
-  <section id="home" class="screen active">
-    <div class="centered">
-      <h1>Meal Prep</h1>
+  <title>Meal Prep</title>
 
-      <button class="main-btn" id="btnEscolher">Escolher refeições</button>
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-      <button class="main-btn ghost" id="btnSemana">Semana atual</button>
+<body>
+  <div id="app">
 
-      <button class="main-btn ghost" id="btnHistorico">Histórico</button>
-    </div>
-  </section>
+    <!-- HOME -->
+    <section id="home" class="screen active">
+      <div class="centered">
+        <h1>Meal Prep</h1>
 
-  <!-- ESCOLHA -->
-  <section id="swipe" class="screen">
-    <header class="top-bar">
-      <button class="back-btn" id="backFromSwipe">←</button>
-      <h2>Escolher refeição</h2>
-    </header>
+        <button class="main-btn" onclick="navigate('swipe')">
+          Escolher refeições
+        </button>
 
-    <div id="meal-container" class="card">
-      <div id="mealImagePlaceholder">📷</div>
-      <h3 id="mealName"></h3>
-      <p id="currentDayDisplay"></p>
-    </div>
+        <button class="main-btn ghost" onclick="navigate('week')">
+          Semana atual
+        </button>
 
-    <div id="buttons" class="action-buttons">
-      <button class="yes-btn" id="yesBtn">Sim</button>
-      <button class="no-btn" id="noBtn">Não</button>
-    </div>
-  </section>
+        <button class="main-btn ghost" onclick="navigate('history')">
+          Histórico
+        </button>
+      </div>
+    </section>
 
-  <!-- SEMANA -->
-  <section id="week" class="screen">
-    <header class="top-bar">
-      <button class="back-btn" id="backFromWeek">←</button>
-      <h2>Semana</h2>
-    </header>
+    <!-- ESCOLHA -->
+    <section id="swipe" class="screen">
+      <header class="top-bar">
+        <button class="back-btn" onclick="navigate('home')">←</button>
+        <h2>Escolher refeição</h2>
+      </header>
 
-    <ul class="week-list">
-      <li id="day-row-0"><span>Segunda</span><strong id="day-0">—</strong></li>
-      <li id="day-row-1"><span>Terça</span><strong id="day-1">—</strong></li>
-      <li id="day-row-2"><span>Quarta</span><strong id="day-2">—</strong></li>
-      <li id="day-row-3"><span>Quinta</span><strong id="day-3">—</strong></li>
-      <li id="day-row-4"><span>Sexta</span><strong id="day-4">—</strong></li>
-      <li id="day-row-5"><span>Sábado</span><strong id="day-5">—</strong></li>
-      <li id="day-row-6"><span>Domingo</span><strong id="day-6">—</strong></li>
-    </ul>
+      <div id="meal-container" class="card">
+        <div id="mealImagePlaceholder">📷</div>
+        <h3 id="mealName"></h3>
+        <p id="currentDayDisplay"></p>
+      </div>
 
-    <button class="danger-btn" id="clearWeekBtn">
-      Limpar refeições
-    </button>
-  </section>
+      <div id="buttons" class="action-buttons">
+        <button class="yes-btn" onclick="chooseMeal(true)">Sim</button>
+        <button class="no-btn" onclick="chooseMeal(false)">Não</button>
+      </div>
+    </section>
 
-  <!-- HISTÓRICO -->
-  <section id="history" class="screen">
-    <header class="top-bar">
-      <button class="back-btn" id="backFromHistory">←</button>
-      <h2>Histórico</h2>
-    </header>
+    <!-- SEMANA -->
+    <section id="week" class="screen">
+      <header class="top-bar">
+        <button class="back-btn" onclick="navigate('home')">←</button>
+        <h2>Semana</h2>
+      </header>
 
-    <p class="placeholder-text">
-      O histórico será implementado mais tarde.
-    </p>
-  </section>
+      <ul class="week-list">
+        <li id="day-row-0"><span>Segunda</span><strong id="day-0">—</strong></li>
+        <li id="day-row-1"><span>Terça</span><strong id="day-1">—</strong></li>
+        <li id="day-row-2"><span>Quarta</span><strong id="day-2">—</strong></li>
+        <li id="day-row-3"><span>Quinta</span><strong id="day-3">—</strong></li>
+        <li id="day-row-4"><span>Sexta</span><strong id="day-4">—</strong></li>
+        <li id="day-row-5"><span>Sábado</span><strong id="day-5">—</strong></li>
+        <li id="day-row-6"><span>Domingo</span><strong id="day-6">—</strong></li>
+      </ul>
 
-</div>
+      <button class="danger-btn" onclick="clearWeek()">
+        Limpar refeições
+      </button>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section id="history" class="screen">
+      <header class="top-bar">
+        <button class="back-btn" onclick="navigate('home')">←</button>
+        <h2>Histórico</h2>
+      </header>
+
+      <p class="placeholder-text">
+        O histórico será implementado mais tarde.
+      </p>
+    </section>
+
+  </div>
+
+  <!-- JS -->
+  <script src="app.js"></script>
+</body>
+</html>
