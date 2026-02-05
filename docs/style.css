@@ -7,8 +7,7 @@
 
 * {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter",
-    "SF Pro Display", "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", sans-serif;
 }
 
 body {
@@ -24,7 +23,6 @@ body {
   padding: 24px;
 }
 
-/* Screens & transitions */
 .screen {
   display: none;
   opacity: 0;
@@ -38,7 +36,6 @@ body {
   transform: translateY(0);
 }
 
-/* Home */
 .centered {
   display: flex;
   flex-direction: column;
@@ -51,7 +48,6 @@ h1 {
   margin-bottom: 48px;
 }
 
-/* Buttons */
 .main-btn {
   padding: 16px;
   font-size: 16px;
@@ -74,7 +70,6 @@ h1 {
   color: var(--black);
 }
 
-/* Top bar */
 .top-bar {
   display: flex;
   align-items: center;
@@ -89,7 +84,6 @@ h1 {
   cursor: pointer;
 }
 
-/* Card */
 .card {
   background: var(--white);
   border-radius: 24px;
@@ -115,19 +109,12 @@ h1 {
   font-weight: 600;
 }
 
-#mealName.finished {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeIn 0.5s forwards;
-}
-
 #currentDayDisplay {
   font-size: 14px;
   color: #555;
   transition: opacity 0.3s ease;
 }
 
-/* Actions */
 .action-buttons {
   display: flex;
   justify-content: space-between;
@@ -158,7 +145,6 @@ h1 {
   background: var(--gray-light);
 }
 
-/* Week */
 .week-list {
   list-style: none;
   padding: 0;
@@ -184,7 +170,6 @@ h1 {
   color: #555;
 }
 
-/* Danger */
 .danger-btn {
   width: 100%;
   background: var(--black);
@@ -201,7 +186,6 @@ h1 {
   opacity: 0.95;
 }
 
-/* Misc */
 .placeholder-text {
   text-align: center;
   color: #777;
