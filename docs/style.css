@@ -7,8 +7,7 @@
 
 * {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter",
-    "SF Pro Display", "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", sans-serif;
 }
 
 body {
@@ -24,8 +23,7 @@ body {
   padding: 24px;
 }
 
-/* Screens */
-
+/* Screens & transitions */
 .screen {
   display: none;
   opacity: 0;
@@ -40,7 +38,6 @@ body {
 }
 
 /* Home */
-
 .centered {
   display: flex;
   flex-direction: column;
@@ -54,7 +51,6 @@ h1 {
 }
 
 /* Buttons */
-
 .main-btn {
   padding: 16px;
   font-size: 16px;
@@ -63,6 +59,12 @@ h1 {
   background: var(--black);
   color: var(--white);
   margin-bottom: 16px;
+  transition: transform 0.1s ease, opacity 0.1s ease, background 0.2s ease;
+}
+
+.main-btn:hover {
+  transform: scale(1.03);
+  opacity: 0.95;
 }
 
 .main-btn.ghost {
@@ -72,16 +74,9 @@ h1 {
 
 button {
   cursor: pointer;
-  transition: transform 0.1s ease, opacity 0.1s ease;
-}
-
-button:active {
-  transform: scale(0.97);
-  opacity: 0.85;
 }
 
 /* Top bar */
-
 .top-bar {
   display: flex;
   align-items: center;
@@ -96,13 +91,13 @@ button:active {
 }
 
 /* Card */
-
 .card {
   background: var(--white);
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   text-align: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 #mealImagePlaceholder {
@@ -121,13 +116,19 @@ button:active {
   font-weight: 600;
 }
 
+#mealName.finished {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeIn 0.5s forwards;
+}
+
 #currentDayDisplay {
   font-size: 14px;
   color: #555;
+  transition: opacity 0.3s ease;
 }
 
 /* Actions */
-
 .action-buttons {
   display: flex;
   justify-content: space-between;
@@ -140,6 +141,12 @@ button:active {
   font-size: 16px;
   border-radius: 14px;
   border: none;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+}
+
+.action-buttons button:hover {
+  transform: scale(1.05);
+  opacity: 0.95;
 }
 
 .yes-btn {
@@ -152,7 +159,6 @@ button:active {
 }
 
 /* Week */
-
 .week-list {
   list-style: none;
   padding: 0;
@@ -165,11 +171,13 @@ button:active {
   padding: 14px;
   border-radius: 12px;
   margin-bottom: 6px;
+  transition: transform 0.2s ease, background 0.3s ease;
 }
 
 .week-list li.active {
   background: var(--gray-soft);
-  font-weight: 600;
+  font-weight: 700;
+  transform: scale(1.03);
 }
 
 .week-list span {
@@ -177,7 +185,6 @@ button:active {
 }
 
 /* Danger */
-
 .danger-btn {
   width: 100%;
   background: var(--black);
@@ -185,12 +192,24 @@ button:active {
   padding: 14px;
   border-radius: 14px;
   border: none;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.danger-btn:hover {
+  transform: scale(1.03);
+  opacity: 0.95;
 }
 
 /* Misc */
-
 .placeholder-text {
   text-align: center;
   color: #777;
   margin-top: 40px;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
