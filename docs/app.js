@@ -99,16 +99,9 @@ function highlightDay() {
 }
 
 function updateDay() {
-  if (currentDay >= 7 || meals.length === 0) {
-    mealName.textContent = "Já não há mais refeições chefe!";
-    currentDayDisplay.textContent = "";
-    buttons.style.display = "none"; // Sim/Não escondidos
-    highlightDay();
-    return;
-  }
+  buttons.style.display = meals.length > 0 ? "flex" : "flex"; // sempre mostrar reset
 
-  buttons.style.display = "flex";
-  mealName.textContent = meals[currentIndex];
+  mealName.textContent = meals.length > 0 ? meals[currentIndex] : "Já não há mais refeições chefe!";
   currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
   highlightDay();
 }
@@ -152,7 +145,7 @@ async function resetDay() {
     }
   }
 
-  // Volta ao início do loop das refeições
+  // Volta ao início do loop
   currentIndex = 0;
   updateDay();
 }
