@@ -1,201 +1,201 @@
-:root {
-  --black: #000;
-  --white: #fff;
-  --gray-light: #f2f2f2;
-  --gray-soft: #e8e8e8;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyAZ4D0oRlCIwEEjRjPA2RauyxvIBFhzS-U",
+  authDomain: "testemeals.firebaseapp.com",
+  projectId: "testemeals",
+  storageBucket: "testemeals.firebasestorage.app",
+  messagingSenderId: "467182854778",
+  appId: "1:467182854778:web:ebd40e0426d1c053b611c3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// USER
+const USER_KEY = "mealprep_user";
+let currentUser = localStorage.getItem(USER_KEY);
+
+// NAVIGATION
+function showScreen(screenId) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(screenId).classList.add("active");
 }
 
-* {
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", sans-serif;
+function initUser() {
+  if (!currentUser) showScreen("user-select");
+  else {
+    showScreen("home");
+    updateUserIndicator();
+  }
 }
 
-body {
-  margin: 0;
-  background: var(--white);
-  color: var(--black);
+function setUser(user) {
+  localStorage.setItem(USER_KEY, user);
+  currentUser = user;
+  updateUserIndicator();
+  showScreen("home");
 }
 
-#app {
-  max-width: 430px;
-  margin: 0 auto;
-  min-height: 100vh;
-  padding: 24px;
+function updateUserIndicator() {
+  const indicator = document.getElementById("user-indicator");
+  indicator.textContent = currentUser === "hugo" ? "Hugo" : "Lúcia";
 }
 
-/* Screens & transitions */
-.screen {
-  display: none;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+// USER SELECT EVENTS
+document.getElementById("selectHugo").onclick = () => setUser("hugo");
+document.getElementById("selectLucia").onclick = () => setUser("lucia");
+
+// NAVIGATION
+document.getElementById("btnEscolher").onclick = () => { showScreen("swipe"); updateDay(); };
+document.getElementById("btnSemana").onclick = () => { showScreen("week"); loadWeek(); };
+document.getElementById("btnHistorico").onclick = () => { showScreen("history"); };
+document.getElementById("backFromSwipe").onclick = () => showScreen("home");
+document.getElementById("backFromWeek").onclick = () => showScreen("home");
+document.getElementById("backFromHistory").onclick = () => showScreen("home");
+
+// DADOS
+let meals = [
+  "Frango com arroz",
+  "Massa à bolonhesa",
+  "Salmão grelhado",
+  "Stir-fry de legumes",
+  "Wrap de frango",
+  "Arroz de pato",
+  "Bowl vegetariano"
+];
+
+const weekDays = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado","Domingo"];
+let currentIndex = 0;
+let currentDay = 0;
+
+// ELEMENTOS
+const mealName = document.getElementById("mealName");
+const currentDayDisplay = document.getElementById("currentDayDisplay");
+const buttons = document.getElementById("buttons");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const clearWeekBtn = document.getElementById("clearWeekBtn");
+const resetDayBtn = document.getElementById("resetDayBtn");
+
+// ------------------ FUNÇÕES ------------------
+function highlightDay() {
+  for (let i = 0; i < 7; i++) {
+    const el = document.getElementById(`day-row-${i}`);
+    el.classList.toggle("active", i === currentDay);
+  }
 }
 
-.screen.active {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
+function updateDay() {
+  if (currentDay >= 7 || meals.length === 0) {
+    mealName.textContent = "Já não há mais refeições chefe!";
+    currentDayDisplay.textContent = "";
+    buttons.style.display = "none";
+    resetDayBtn.style.display = "none";
+    highlightDay();
+    return;
+  }
+
+  buttons.style.display = "flex";
+  resetDayBtn.style.display = "block"; // sempre visível
+  mealName.textContent = meals[currentIndex];
+  currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
+  highlightDay();
 }
 
-/* Home */
-.centered {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 90vh;
+// ------------------ ESCOLHA ------------------
+async function chooseMeal(isLike) {
+  if (!navigator.onLine) {
+    alert("Sem ligação à internet. As escolhas serão resolvidas depois.");
+    return;
+  }
+
+  const selectedMeal = meals[currentIndex];
+
+  if (isLike) {
+    await setDoc(
+      doc(db, "preferences", `${weekDays[currentDay]}_${currentUser}_${selectedMeal}`),
+      { user: currentUser, day: weekDays[currentDay], meal: selectedMeal }
+    );
+    meals.splice(currentIndex,1); // remove do loop do user
+  } else {
+    meals.push(meals.splice(currentIndex,1)[0]);
+  }
+
+  if (currentIndex >= meals.length) currentIndex = 0;
+  updateDay();
 }
 
-h1 {
-  font-size: 36px;
-  margin-bottom: 48px;
+// ------------------ RESET DO DIA ------------------
+async function resetDay() {
+  const snapshot = await getDocs(collection(db, "preferences"));
+
+  // apagar apenas escolhas do user no dia atual
+  snapshot.forEach(async docSnap => {
+    const data = docSnap.data();
+    if (data.day === weekDays[currentDay] && data.user === currentUser) {
+      await deleteDoc(doc(db, "preferences", docSnap.id));
+    }
+  });
+
+  // restaurar loop de refeições do user
+  meals = [
+    "Frango com arroz",
+    "Massa à bolonhesa",
+    "Salmão grelhado",
+    "Stir-fry de legumes",
+    "Wrap de frango",
+    "Arroz de pato",
+    "Bowl vegetariano"
+  ];
+
+  // volta ao início do menu de escolha do dia
+  currentIndex = 0;
+  updateDay();
 }
 
-/* Buttons */
-.main-btn {
-  padding: 16px;
-  font-size: 16px;
-  border-radius: 14px;
-  border: none;
-  background: var(--black);
-  color: var(--white);
-  margin-bottom: 16px;
-  transition: transform 0.1s ease, opacity 0.1s ease, background 0.2s ease;
+// ------------------ SEMANA ------------------
+async function loadWeek() {
+  for (let i = 0; i < 7; i++) {
+    document.getElementById(`day-${i}`).textContent = "—";
+  }
+
+  const snapshot = await getDocs(collection(db, "week"));
+  snapshot.forEach(docSnap => {
+    const idx = weekDays.indexOf(docSnap.id);
+    if (idx >= 0) document.getElementById(`day-${idx}`).textContent = docSnap.data().meal;
+  });
 }
 
-.main-btn:hover {
-  transform: scale(1.03);
-  opacity: 0.95;
+// ------------------ LIMPAR SEMANA ------------------
+async function clearWeek() {
+  if (!confirm("Limpar todas as refeições?")) return;
+  const snapshot = await getDocs(collection(db, "week"));
+  for (const docSnap of snapshot.docs) {
+    await deleteDoc(doc(db, "week", docSnap.id));
+  }
+  currentDay = 0;
+  currentIndex = 0;
+  meals = [
+    "Frango com arroz",
+    "Massa à bolonhesa",
+    "Salmão grelhado",
+    "Stir-fry de legumes",
+    "Wrap de frango",
+    "Arroz de pato",
+    "Bowl vegetariano"
+  ];
+  updateDay();
 }
 
-.main-btn.ghost {
-  background: var(--gray-light);
-  color: var(--black);
-}
+// ------------------ EVENTOS ------------------
+yesBtn.onclick = () => chooseMeal(true);
+noBtn.onclick = () => chooseMeal(false);
+clearWeekBtn.onclick = clearWeek;
+resetDayBtn.onclick = resetDay;
 
-button {
-  cursor: pointer;
-}
-
-/* Top bar */
-.top-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.back-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-}
-
-/* Card */
-.card {
-  background: var(--white);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  text-align: center;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-#mealImagePlaceholder {
-  height: 220px;
-  border-radius: 18px;
-  background: var(--gray-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-  margin-bottom: 20px;
-}
-
-#mealName {
-  font-size: 22px;
-  font-weight: 600;
-}
-
-#currentDayDisplay {
-  font-size: 14px;
-  color: #555;
-}
-
-/* Actions */
-.action-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 32px;
-}
-
-.action-buttons button {
-  width: 48%;
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 14px;
-  border: none;
-  transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
-}
-
-.action-buttons button:hover {
-  transform: scale(1.05);
-  opacity: 0.95;
-}
-
-.yes-btn {
-  background: var(--black);
-  color: var(--white);
-}
-
-.no-btn {
-  background: var(--gray-light);
-}
-
-/* Week */
-.week-list {
-  list-style: none;
-  padding: 0;
-  margin-bottom: 32px;
-}
-
-.week-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 14px;
-  border-radius: 12px;
-  margin-bottom: 6px;
-  transition: transform 0.2s ease, background 0.3s ease;
-}
-
-.week-list li.active {
-  background: var(--gray-soft);
-  font-weight: 700;
-  transform: scale(1.03);
-}
-
-.week-list span {
-  color: #555;
-}
-
-/* Danger */
-.danger-btn {
-  width: 100%;
-  background: var(--black);
-  color: var(--white);
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
-  transition: transform 0.1s ease, opacity 0.1s ease;
-}
-
-.danger-btn:hover {
-  transform: scale(1.03);
-  opacity: 0.95;
-}
-
-/* Misc */
-.placeholder-text {
-  text-align: center;
-  color: #777;
-  margin-top: 40px;
-}
+// ------------------ INIT ------------------
+initUser();
+updateDay();
