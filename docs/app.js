@@ -102,8 +102,7 @@ function updateDay() {
   if (currentDay >= 7 || meals.length === 0) {
     mealName.textContent = "Já não há mais refeições chefe!";
     currentDayDisplay.textContent = "";
-    // Botões sim/não escondidos apenas aqui
-    buttons.style.display = "none";
+    buttons.style.display = "none"; // Sim/Não escondidos
     highlightDay();
     return;
   }
@@ -153,7 +152,7 @@ async function resetDay() {
     }
   }
 
-  // Recarregar a seleção do dia
+  // Volta ao início do loop das refeições
   currentIndex = 0;
   updateDay();
 }
