@@ -2,20 +2,18 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* Firebase */
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyAZ4D0oRlCIwEEjRjPA2RauyxvIBFhzS-U",
   authDomain: "testemeals.firebaseapp.com",
   projectId: "testemeals"
-};
-
-const app = initializeApp(firebaseConfig);
+});
 const db = getFirestore(app);
 
 /* User */
 const USER_KEY = "mealprep_user";
 let currentUser = localStorage.getItem(USER_KEY);
 
-/* Data (IMUTÁVEL) */
+/* Data */
 const ORIGINAL_MEALS = [
   "Frango com arroz",
   "Massa à bolonhesa",
@@ -27,16 +25,10 @@ const ORIGINAL_MEALS = [
 ];
 
 const weekDays = [
-  "Segunda-feira",
-  "Terça-feira",
-  "Quarta-feira",
-  "Quinta-feira",
-  "Sexta-feira",
-  "Sábado",
-  "Domingo"
+  "Segunda-feira","Terça-feira","Quarta-feira",
+  "Quinta-feira","Sexta-feira","Sábado","Domingo"
 ];
 
-/* Estado MUTÁVEL */
 let meals = [...ORIGINAL_MEALS];
 let currentIndex = 0;
 let currentDay = 0;
@@ -45,9 +37,7 @@ let currentDay = 0;
 const mealName = document.getElementById("mealName");
 const currentDayDisplay = document.getElementById("currentDayDisplay");
 const buttons = document.getElementById("buttons");
-const yesBtn = document.getElementById("yesBtn");
-const noBtn = document.getElementById("noBtn");
-const resetDayBtn = document.getElementById("resetDayBtn");
+const indicator = document.getElementById("user-indicator");
 
 /* Screens */
 function showScreen(id) {
@@ -55,15 +45,24 @@ function showScreen(id) {
   document.getElementById(id).classList.add("active");
 }
 
+/* User */
+function updateUserIndicator() {
+  indicator.textContent = currentUser ? currentUser : "";
+}
+
 function initUser() {
-  if (!currentUser) showScreen("user-select");
-  else showScreen("home");
+  if (!currentUser) {
+    showScreen("user-select");
+  } else {
+    updateUserIndicator();
+    showScreen("home");
+  }
 }
 
 function setUser(user) {
   currentUser = user;
   localStorage.setItem(USER_KEY, user);
-  document.getElementById("user-indicator").textContent = user;
+  updateUserIndicator();
   showScreen("home");
 }
 
@@ -81,7 +80,7 @@ function updateDay() {
   mealName.textContent = meals[currentIndex];
 }
 
-/* Escolha */
+/* Actions */
 async function chooseMeal(isLike) {
   const meal = meals[currentIndex];
 
@@ -99,32 +98,37 @@ async function chooseMeal(isLike) {
   updateDay();
 }
 
-/* RESET CORRETO */
 async function resetDay() {
-  const prefix = `${weekDays[currentDay]}_${currentUser}_`;
   const snapshot = await getDocs(collection(db, "preferences"));
-
-  for (const d of snapshot.docs) {
-    if (d.id.startsWith(prefix)) {
-      await deleteDoc(doc(db, "preferences", d.id));
+  snapshot.forEach(d => {
+    if (d.id.startsWith(`${weekDays[currentDay]}_${currentUser}_`)) {
+      deleteDoc(doc(db, "preferences", d.id));
     }
-  }
+  });
 
-  // 🔥 RESET TOTAL DO LOOP
   meals = [...ORIGINAL_MEALS];
   currentIndex = 0;
   updateDay();
 }
 
 /* Events */
-yesBtn.onclick = () => chooseMeal(true);
-noBtn.onclick = () => chooseMeal(false);
-resetDayBtn.onclick = resetDay;
+document.getElementById("selectHugo").onclick = () => setUser("Hugo");
+document.getElementById("selectLucia").onclick = () => setUser("Lúcia");
 
-document.getElementById("selectHugo").onclick = () => setUser("hugo");
-document.getElementById("selectLucia").onclick = () => setUser("lucia");
-document.getElementById("btnEscolher").onclick = () => { showScreen("swipe"); updateDay(); };
+document.getElementById("btnEscolher").onclick = () => {
+  showScreen("swipe");
+  updateDay();
+};
+document.getElementById("btnSemana").onclick = () => showScreen("week");
+document.getElementById("btnHistorico").onclick = () => showScreen("history");
+
 document.getElementById("backFromSwipe").onclick = () => showScreen("home");
+document.getElementById("backFromWeek").onclick = () => showScreen("home");
+document.getElementById("backFromHistory").onclick = () => showScreen("home");
+
+document.getElementById("yesBtn").onclick = () => chooseMeal(true);
+document.getElementById("noBtn").onclick = () => chooseMeal(false);
+document.getElementById("resetDayBtn").onclick = resetDay;
 
 /* Init */
 initUser();
