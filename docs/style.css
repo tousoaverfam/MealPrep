@@ -1,8 +1,7 @@
 :root {
-  --primary: #FF8C42;
-  --secondary: #FFD9C0;
-  --accent: #6A0572;
-  --black: #2E2E2E;
+  --primary: #94CA46;
+  --secondary: #539640;
+  --accent: #2E2E2E;
   --white: #fff;
   --gray-light: #f2f2f2;
   --gray-soft: #e8e8e8;
@@ -17,7 +16,7 @@
 body {
   margin: 0;
   background: var(--secondary);
-  color: var(--black);
+  color: var(--accent);
 }
 
 #app {
@@ -27,7 +26,7 @@ body {
   padding: 24px;
 }
 
-/* Screens & transitions */
+/* Screens */
 .screen {
   display: none;
   opacity: 0;
@@ -90,7 +89,7 @@ h1 {
   background: none;
   border: none;
   font-size: 20px;
-  color: var(--accent);
+  color: var(--primary);
 }
 
 /* Card */
@@ -100,7 +99,6 @@ h1 {
   padding: 24px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   text-align: center;
-  transition: opacity 0.3s ease, transform 0.3s ease;
   margin-bottom: 16px;
 }
 
@@ -138,7 +136,7 @@ h1 {
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px; /* ligeiro espaçamento */
+  margin-bottom: 12px;
 }
 
 .action-buttons button {
@@ -147,12 +145,6 @@ h1 {
   font-size: 16px;
   border-radius: 14px;
   border: none;
-  transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
-}
-
-.action-buttons button:hover {
-  transform: scale(1.05);
-  opacity: 0.95;
 }
 
 .yes-btn {
@@ -173,12 +165,10 @@ h1 {
   border: 2px solid var(--red);
   background: transparent;
   color: var(--red);
-  transition: transform 0.1s ease, opacity 0.1s ease;
   margin-bottom: 16px;
 }
 
 .reset-btn:hover {
-  transform: scale(1.03);
   opacity: 0.85;
 }
 
@@ -195,7 +185,6 @@ h1 {
   padding: 14px;
   border-radius: 12px;
   margin-bottom: 6px;
-  transition: transform 0.2s ease, background 0.3s ease;
 }
 
 .week-list li.active {
@@ -216,15 +205,8 @@ h1 {
   padding: 14px;
   border-radius: 14px;
   border: none;
-  transition: transform 0.1s ease, opacity 0.1s ease;
 }
 
-.danger-btn:hover {
-  transform: scale(1.03);
-  opacity: 0.95;
-}
-
-/* Misc */
 .placeholder-text {
   text-align: center;
   color: #777;
