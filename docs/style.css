@@ -3,12 +3,12 @@
   --white: #fff;
   --gray-light: #f2f2f2;
   --gray-soft: #e8e8e8;
-  --red: #f44336;
+  --red: #c00;
 }
 
 * {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", sans-serif;
 }
 
 body {
@@ -24,23 +24,26 @@ body {
   padding: 24px;
 }
 
-/* SCREENS */
+/* Screens & transitions */
 .screen {
   display: none;
-  min-height: 100vh;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .screen.active {
-  display: flex;
-  flex-direction: column;
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
 }
 
-/* CENTERED */
+/* Home */
 .centered {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  height: 90vh;
 }
 
 h1 {
@@ -48,11 +51,7 @@ h1 {
   margin-bottom: 48px;
 }
 
-h2 {
-  margin: 0;
-}
-
-/* BUTTONS */
+/* Buttons */
 .main-btn {
   padding: 16px;
   font-size: 16px;
@@ -61,6 +60,12 @@ h2 {
   background: var(--black);
   color: var(--white);
   margin-bottom: 16px;
+  transition: transform 0.1s ease, opacity 0.1s ease, background 0.2s ease;
+}
+
+.main-btn:hover {
+  transform: scale(1.03);
+  opacity: 0.95;
 }
 
 .main-btn.ghost {
@@ -72,7 +77,7 @@ button {
   cursor: pointer;
 }
 
-/* TOP BAR */
+/* Top bar */
 .top-bar {
   display: flex;
   align-items: center;
@@ -86,13 +91,14 @@ button {
   font-size: 20px;
 }
 
-/* CARD */
+/* Card */
 .card {
   background: var(--white);
   border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   text-align: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 #mealImagePlaceholder {
@@ -111,45 +117,70 @@ button {
   font-weight: 600;
 }
 
+#mealName.finished {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeIn 0.5s forwards;
+}
+
 #currentDayDisplay {
   font-size: 14px;
-  color: #666;
-  margin-top: 6px;
+  color: #555;
+  margin-bottom: 20px;
+  transition: opacity 0.3s ease;
 }
 
-/* SWIPE */
-#swipe {
-  padding-bottom: 16px;
-}
-
+/* Actions */
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  margin-top: 16px;
+  margin-bottom: 16px;
 }
 
 .action-buttons button {
   width: 48%;
   padding: 14px;
+  font-size: 16px;
   border-radius: 14px;
   border: none;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
 }
 
-/* RESET BUTTON */
+.action-buttons button:hover {
+  transform: scale(1.05);
+  opacity: 0.95;
+}
+
+.yes-btn {
+  background: var(--black);
+  color: var(--white);
+}
+
+.no-btn {
+  background: var(--gray-light);
+}
+
+/* Reset Day Button */
 .reset-btn {
   width: 100%;
-  margin-top: 16px;
+  padding: 14px;
+  font-size: 14px;
+  border-radius: 14px;
+  border: 2px solid var(--red);
   background: transparent;
   color: var(--red);
-  border: 2px solid var(--red);
-  border-radius: 14px;
+  transition: transform 0.1s ease, opacity 0.1s ease;
 }
 
-/* WEEK / HISTORY */
+.reset-btn:hover {
+  transform: scale(1.03);
+  opacity: 0.85;
+}
+
+/* Week */
 .week-list {
   list-style: none;
   padding: 0;
-  margin-top: 16px;
   margin-bottom: 32px;
 }
 
@@ -159,15 +190,20 @@ button {
   padding: 14px;
   border-radius: 12px;
   margin-bottom: 6px;
+  transition: transform 0.2s ease, background 0.3s ease;
 }
 
-.placeholder-text {
-  margin-top: 40px;
-  color: #777;
-  text-align: center;
+.week-list li.active {
+  background: var(--gray-soft);
+  font-weight: 700;
+  transform: scale(1.03);
 }
 
-/* DANGER */
+.week-list span {
+  color: #555;
+}
+
+/* Danger */
 .danger-btn {
   width: 100%;
   background: var(--black);
@@ -175,6 +211,26 @@ button {
   padding: 14px;
   border-radius: 14px;
   border: none;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.danger-btn:hover {
+  transform: scale(1.03);
+  opacity: 0.95;
+}
+
+/* Misc */
+.placeholder-text {
+  text-align: center;
+  color: #777;
+  margin-top: 40px;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* USER INDICATOR */
