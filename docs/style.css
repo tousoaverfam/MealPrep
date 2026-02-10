@@ -1,9 +1,12 @@
 :root {
-  --black: #000;
+  --primary: #FF8C42;
+  --secondary: #FFD9C0;
+  --accent: #6A0572;
+  --black: #2E2E2E;
   --white: #fff;
   --gray-light: #f2f2f2;
   --gray-soft: #e8e8e8;
-  --red: #c00;
+  --red: #C70039;
 }
 
 * {
@@ -13,7 +16,7 @@
 
 body {
   margin: 0;
-  background: var(--white);
+  background: var(--secondary);
   color: var(--black);
 }
 
@@ -44,6 +47,7 @@ body {
   flex-direction: column;
   justify-content: center;
   height: 90vh;
+  text-align: center;
 }
 
 h1 {
@@ -57,7 +61,7 @@ h1 {
   font-size: 16px;
   border-radius: 14px;
   border: none;
-  background: var(--black);
+  background: var(--primary);
   color: var(--white);
   margin-bottom: 16px;
   transition: transform 0.1s ease, opacity 0.1s ease, background 0.2s ease;
@@ -69,12 +73,9 @@ h1 {
 }
 
 .main-btn.ghost {
-  background: var(--gray-light);
-  color: var(--black);
-}
-
-button {
-  cursor: pointer;
+  background: var(--white);
+  color: var(--primary);
+  border: 2px solid var(--primary);
 }
 
 /* Top bar */
@@ -89,6 +90,7 @@ button {
   background: none;
   border: none;
   font-size: 20px;
+  color: var(--accent);
 }
 
 /* Card */
@@ -99,6 +101,7 @@ button {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   text-align: center;
   transition: opacity 0.3s ease, transform 0.3s ease;
+  margin-bottom: 16px;
 }
 
 #mealImagePlaceholder {
@@ -115,6 +118,7 @@ button {
 #mealName {
   font-size: 22px;
   font-weight: 600;
+  margin-bottom: 12px;
 }
 
 #mealName.finished {
@@ -126,7 +130,7 @@ button {
 #currentDayDisplay {
   font-size: 14px;
   color: #555;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   transition: opacity 0.3s ease;
 }
 
@@ -134,7 +138,7 @@ button {
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 12px; /* ligeiro espaçamento */
 }
 
 .action-buttons button {
@@ -152,12 +156,12 @@ button {
 }
 
 .yes-btn {
-  background: var(--black);
+  background: var(--primary);
   color: var(--white);
 }
 
 .no-btn {
-  background: var(--gray-light);
+  background: var(--gray-soft);
 }
 
 /* Reset Day Button */
@@ -170,6 +174,7 @@ button {
   background: transparent;
   color: var(--red);
   transition: transform 0.1s ease, opacity 0.1s ease;
+  margin-bottom: 16px;
 }
 
 .reset-btn:hover {
@@ -206,7 +211,7 @@ button {
 /* Danger */
 .danger-btn {
   width: 100%;
-  background: var(--black);
+  background: var(--primary);
   color: var(--white);
   padding: 14px;
   border-radius: 14px;
