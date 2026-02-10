@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meal Prep</title>
+
   <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
   <div id="app">
 
+    <!-- USER SELECT -->
     <section id="user-select" class="screen">
       <div class="centered">
         <h1>Quem está a usar?</h1>
@@ -18,6 +20,7 @@
       </div>
     </section>
 
+    <!-- HOME -->
     <section id="home" class="screen">
       <div class="centered">
         <h1>Meal Prep</h1>
@@ -27,6 +30,7 @@
       </div>
     </section>
 
+    <!-- ESCOLHA -->
     <section id="swipe" class="screen">
       <header class="top-bar">
         <button class="back-btn" id="backFromSwipe">←</button>
@@ -44,7 +48,39 @@
         <button class="no-btn" id="noBtn">Não</button>
       </div>
 
-      <button class="reset-btn" id="resetDayBtn">Limpar escolhas</button>
+      <button class="reset-btn" id="resetDayBtn">
+        Limpar escolhas
+      </button>
+    </section>
+
+    <!-- SEMANA -->
+    <section id="week" class="screen">
+      <header class="top-bar">
+        <button class="back-btn" id="backFromWeek">←</button>
+        <h2>Semana</h2>
+      </header>
+
+      <ul class="week-list">
+        <li><span>Segunda</span><strong id="day-0">—</strong></li>
+        <li><span>Terça</span><strong id="day-1">—</strong></li>
+        <li><span>Quarta</span><strong id="day-2">—</strong></li>
+        <li><span>Quinta</span><strong id="day-3">—</strong></li>
+        <li><span>Sexta</span><strong id="day-4">—</strong></li>
+        <li><span>Sábado</span><strong id="day-5">—</strong></li>
+        <li><span>Domingo</span><strong id="day-6">—</strong></li>
+      </ul>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section id="history" class="screen">
+      <header class="top-bar">
+        <button class="back-btn" id="backFromHistory">←</button>
+        <h2>Histórico</h2>
+      </header>
+
+      <p class="placeholder-text">
+        O histórico será implementado mais tarde.
+      </p>
     </section>
 
   </div>
