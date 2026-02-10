@@ -1,59 +1,43 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meal Prep</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAZ4D0oRlCIwEEjRjPA2RauyxvIBFhzS-U",
-      authDomain: "testemeals.firebaseapp.com",
-      projectId: "testemeals",
-      storageBucket: "testemeals.appspot.com",
-      messagingSenderId: "467182854778",
-      appId: "1:467182854778:web:ebd40e0426d1c053b611c3"
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    window.db = db;
-  </script>
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#000000" />
 </head>
-
 <body>
   <div id="app">
 
+    <!-- USER SELECT -->
+    <section id="user-select" class="screen">
+      <div class="centered">
+        <h1>Quem está a usar a app?</h1>
+        <button class="main-btn" id="selectHugo">Hugo</button>
+        <button class="main-btn ghost" id="selectLucia">Lúcia</button>
+      </div>
+    </section>
+
     <!-- HOME -->
-    <section id="home" class="screen active">
+    <section id="home" class="screen">
       <div class="centered">
         <h1>Meal Prep</h1>
-
-        <button class="main-btn" onclick="navigate('swipe')">
-          Escolher refeições
-        </button>
-
-        <button class="main-btn ghost" onclick="navigate('week')">
-          Semana atual
-        </button>
-
-        <button class="main-btn ghost" onclick="navigate('history')">
-          Histórico
-        </button>
+        <button class="main-btn" id="btnEscolher">Escolher refeições</button>
+        <button class="main-btn ghost" id="btnSemana">Semana atual</button>
+        <button class="main-btn ghost" id="btnHistorico">Histórico</button>
       </div>
     </section>
 
     <!-- ESCOLHA -->
     <section id="swipe" class="screen">
       <header class="top-bar">
-        <button class="back-btn" onclick="navigate('home')">←</button>
+        <button class="back-btn" id="backFromSwipe">←</button>
         <h2>Escolher refeição</h2>
       </header>
 
@@ -64,15 +48,17 @@
       </div>
 
       <div id="buttons" class="action-buttons">
-        <button class="yes-btn" onclick="chooseMeal(true)">Sim</button>
-        <button class="no-btn" onclick="chooseMeal(false)">Não</button>
+        <button class="yes-btn" id="yesBtn">Sim</button>
+        <button class="no-btn" id="noBtn">Não</button>
       </div>
+
+      <button class="reset-btn" id="resetDayBtn">Limpar Escolhas</button>
     </section>
 
     <!-- SEMANA -->
     <section id="week" class="screen">
       <header class="top-bar">
-        <button class="back-btn" onclick="navigate('home')">←</button>
+        <button class="back-btn" id="backFromWeek">←</button>
         <h2>Semana</h2>
       </header>
 
@@ -86,25 +72,25 @@
         <li id="day-row-6"><span>Domingo</span><strong id="day-6">—</strong></li>
       </ul>
 
-      <button class="danger-btn" onclick="clearWeek()">
-        Limpar refeições
-      </button>
+      <button class="danger-btn" id="clearWeekBtn">Limpar refeições</button>
     </section>
 
     <!-- HISTÓRICO -->
     <section id="history" class="screen">
       <header class="top-bar">
-        <button class="back-btn" onclick="navigate('home')">←</button>
+        <button class="back-btn" id="backFromHistory">←</button>
         <h2>Histórico</h2>
       </header>
 
-      <p class="placeholder-text">
-        O histórico será implementado mais tarde.
-      </p>
+      <p class="placeholder-text">O histórico será implementado mais tarde.</p>
     </section>
 
   </div>
 
-  <script src="app.js"></script>
+  <!-- USER INDICATOR -->
+  <div id="user-indicator"></div>
+
+  <!-- JS -->
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
