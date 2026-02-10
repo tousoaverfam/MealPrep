@@ -1,11 +1,9 @@
 :root {
-  --primary: #94CA46;
-  --secondary: #539640;
-  --accent: #2E2E2E;
+  --black: #000;
   --white: #fff;
   --gray-light: #f2f2f2;
   --gray-soft: #e8e8e8;
-  --red: #C70039;
+  --red: #c62828;
 }
 
 * {
@@ -15,8 +13,8 @@
 
 body {
   margin: 0;
-  background: var(--secondary);
-  color: var(--accent);
+  background: var(--white);
+  color: var(--black);
 }
 
 #app {
@@ -31,7 +29,7 @@ body {
   display: none;
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .screen.active {
@@ -60,21 +58,14 @@ h1 {
   font-size: 16px;
   border-radius: 14px;
   border: none;
-  background: var(--primary);
+  background: var(--black);
   color: var(--white);
   margin-bottom: 16px;
-  transition: transform 0.1s ease, opacity 0.1s ease, background 0.2s ease;
-}
-
-.main-btn:hover {
-  transform: scale(1.03);
-  opacity: 0.95;
 }
 
 .main-btn.ghost {
-  background: var(--white);
-  color: var(--primary);
-  border: 2px solid var(--primary);
+  background: var(--gray-light);
+  color: var(--black);
 }
 
 /* Top bar */
@@ -89,7 +80,6 @@ h1 {
   background: none;
   border: none;
   font-size: 20px;
-  color: var(--primary);
 }
 
 /* Card */
@@ -110,33 +100,25 @@ h1 {
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 #mealName {
   font-size: 22px;
   font-weight: 600;
-  margin-bottom: 12px;
-}
-
-#mealName.finished {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeIn 0.5s forwards;
+  margin-bottom: 8px;
 }
 
 #currentDayDisplay {
   font-size: 14px;
   color: #555;
-  margin-bottom: 16px;
-  transition: opacity 0.3s ease;
 }
 
 /* Actions */
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin: 12px 0;
 }
 
 .action-buttons button {
@@ -148,28 +130,24 @@ h1 {
 }
 
 .yes-btn {
-  background: var(--primary);
+  background: var(--black);
   color: var(--white);
 }
 
 .no-btn {
-  background: var(--gray-soft);
+  background: var(--gray-light);
 }
 
-/* Reset Day Button */
+/* Reset */
 .reset-btn {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   font-size: 14px;
   border-radius: 14px;
   border: 2px solid var(--red);
   background: transparent;
   color: var(--red);
-  margin-bottom: 16px;
-}
-
-.reset-btn:hover {
-  opacity: 0.85;
+  margin-top: 8px;
 }
 
 /* Week */
@@ -190,21 +168,6 @@ h1 {
 .week-list li.active {
   background: var(--gray-soft);
   font-weight: 700;
-  transform: scale(1.03);
-}
-
-.week-list span {
-  color: #555;
-}
-
-/* Danger */
-.danger-btn {
-  width: 100%;
-  background: var(--primary);
-  color: var(--white);
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
 }
 
 .placeholder-text {
@@ -213,20 +176,11 @@ h1 {
   margin-top: 40px;
 }
 
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* USER INDICATOR */
+/* User indicator */
 #user-indicator {
   position: fixed;
   bottom: 12px;
   right: 16px;
   font-size: 12px;
-  color: #666;
-  opacity: 0.7;
-  pointer-events: none;
+  opacity: 0.6;
 }
