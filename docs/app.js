@@ -1,4 +1,3 @@
-// FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore,
@@ -8,7 +7,8 @@ import {
   getDocs,
   deleteDoc,
   query,
-  where
+  where,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -23,7 +23,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// USER
+// ---------------- USER ----------------
 const USER_KEY = "mealprep_user";
 let currentUser = localStorage.getItem(USER_KEY);
 
@@ -33,7 +33,7 @@ function formatUser(user){
   return "";
 }
 
-// DADOS
+// ---------------- DATA ----------------
 const baseMeals = [
   "Frango com arroz",
   "Massa à bolonhesa",
@@ -45,6 +45,8 @@ const baseMeals = [
 ];
 
 let meals = [...baseMeals];
+let currentIndex = 0;
+let currentDay = 0;
 
 const weekDays = [
   "Segunda-feira",
@@ -56,10 +58,7 @@ const weekDays = [
   "Domingo"
 ];
 
-let currentIndex = 0;
-let currentDay = 0;
-
-// UI HELPERS
+// ---------------- UI ----------------
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -69,28 +68,6 @@ function updateIndicator(){
   document.getElementById("user-indicator").textContent = formatUser(currentUser);
 }
 
-// INIT USER
-function initUser(){
-  if(!currentUser){
-    showScreen("user-select");
-  } else {
-    updateIndicator();
-    showScreen("home");
-  }
-}
-
-document.getElementById("selectHugo").onclick=()=>{localStorage.setItem(USER_KEY,"hugo");currentUser="hugo";initUser();}
-document.getElementById("selectLucia").onclick=()=>{localStorage.setItem(USER_KEY,"lucia");currentUser="lucia";initUser();}
-
-// NAV
-document.getElementById("btnEscolher").onclick=()=>{showScreen("swipe");updateUI();}
-document.getElementById("btnSemana").onclick=()=>{showScreen("week");loadWeek();}
-document.getElementById("btnHistorico").onclick=()=>showScreen("history");
-document.getElementById("backFromSwipe").onclick=()=>showScreen("home");
-document.getElementById("backFromWeek").onclick=()=>showScreen("home");
-document.getElementById("backFromHistory").onclick=()=>showScreen("home");
-
-// UPDATE UI
 function updateUI(){
   const mealName=document.getElementById("mealName");
   const dayDisplay=document.getElementById("currentDayDisplay");
@@ -108,7 +85,16 @@ function updateUI(){
   buttons.style.display="flex";
 }
 
-// CONSENSO
+// ---------------- REALTIME WEEK LISTENER ----------------
+onSnapshot(collection(db,"week"), (snapshot)=>{
+  const daysFilled = snapshot.docs.length;
+  currentDay = daysFilled;
+  meals = [...baseMeals];
+  currentIndex = 0;
+  updateUI();
+});
+
+// ---------------- CONSENSO ----------------
 async function checkConsensus(day){
   const snapshot=await getDocs(query(collection(db,"preferences"),where("day","==",day)));
 
@@ -123,22 +109,19 @@ async function checkConsensus(day){
 
   if(intersection.length>0){
     const chosen=intersection[Math.floor(Math.random()*intersection.length)];
+
     await setDoc(doc(db,"week",day),{meal:chosen});
 
     for(const d of snapshot.docs){
       await deleteDoc(doc(db,"preferences",d.id));
     }
-
-    currentDay++;
-    meals=[...baseMeals];
-    currentIndex=0;
-    updateUI();
   }
 }
 
-// ESCOLHER
+// ---------------- BUTTONS ----------------
 document.getElementById("yesBtn").onclick=async()=>{
   const meal=meals[currentIndex];
+
   await setDoc(doc(db,"preferences",`${currentUser}_${currentDay}_${meal}`),{
     user:currentUser,
     day:weekDays[currentDay],
@@ -157,7 +140,7 @@ document.getElementById("noBtn").onclick=()=>{
   updateUI();
 };
 
-// LIMPAR DIA
+// ---------------- LIMPAR DIA ----------------
 document.getElementById("clearSelectionsBtn").onclick=async()=>{
   const snapshot=await getDocs(query(collection(db,"preferences"),where("day","==",weekDays[currentDay])));
 
@@ -172,7 +155,7 @@ document.getElementById("clearSelectionsBtn").onclick=async()=>{
   updateUI();
 };
 
-// SEMANA
+// ---------------- SEMANA ----------------
 async function loadWeek(){
   for(let i=0;i<7;i++){
     document.getElementById(`day-${i}`).textContent="—";
@@ -187,19 +170,33 @@ async function loadWeek(){
   });
 }
 
-// LIMPAR SEMANA
 document.getElementById("clearWeekBtn").onclick=async()=>{
   const snapshot=await getDocs(collection(db,"week"));
   for(const d of snapshot.docs){
     await deleteDoc(doc(db,"week",d.id));
   }
-
-  currentDay=0;
-  meals=[...baseMeals];
-  currentIndex=0;
-
-  await loadWeek();
 };
+
+// ---------------- NAV ----------------
+document.getElementById("btnEscolher").onclick=()=>{showScreen("swipe");updateUI();}
+document.getElementById("btnSemana").onclick=()=>{showScreen("week");loadWeek();}
+document.getElementById("btnHistorico").onclick=()=>showScreen("history");
+document.getElementById("backFromSwipe").onclick=()=>showScreen("home");
+document.getElementById("backFromWeek").onclick=()=>showScreen("home");
+document.getElementById("backFromHistory").onclick=()=>showScreen("home");
+
+// ---------------- USER ----------------
+function initUser(){
+  if(!currentUser){
+    showScreen("user-select");
+  } else {
+    updateIndicator();
+    showScreen("home");
+  }
+}
+
+document.getElementById("selectHugo").onclick=()=>{localStorage.setItem(USER_KEY,"hugo");currentUser="hugo";initUser();}
+document.getElementById("selectLucia").onclick=()=>{localStorage.setItem(USER_KEY,"lucia");currentUser="lucia";initUser();}
 
 initUser();
 updateUI();
