@@ -113,6 +113,7 @@ const buttons = document.getElementById("buttons");
 const yesBtn = document.getElementById("yesBtn");
 const noBtn = document.getElementById("noBtn");
 const clearSelectionsBtn = document.getElementById("clearSelectionsBtn");
+const weekResetBtn = document.getElementById("resetWeekBtn");
 
 // ------------------- UI -------------------
 function highlightDay() {
@@ -140,7 +141,7 @@ function updateDay() {
   }
 
   buttons.style.display = "flex";
-  mealName.textContent = meals[0]; // sempre mostrar a primeira refeição do loop
+  mealName.textContent = meals[0];
   currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
   highlightDay();
 }
@@ -176,8 +177,15 @@ async function checkConsensus(day) {
 }
 
 // ------------------- ESCOLHA -------------------
+let choosing = false; // evita clique duplo
 async function chooseMeal(isLike) {
-  if (currentDay >= 7 || meals.length === 0) return;
+  if (choosing) return;
+  choosing = true;
+
+  if (currentDay >= 7 || meals.length === 0) {
+    choosing = false;
+    return;
+  }
 
   const selectedMeal = meals[0];
 
@@ -199,13 +207,13 @@ async function chooseMeal(isLike) {
   }
 
   updateDay();
+  choosing = false;
 }
 
 // ------------------- LIMPAR ESCOLHAS -------------------
 if (clearSelectionsBtn) clearSelectionsBtn.onclick = async () => {
   if (currentDay >= 7) return;
 
-  // apagar as escolhas do user no dia atual
   const snapshot = await getDocs(
     query(collection(db, "preferences"),
     where("day", "==", weekDays[currentDay]),
@@ -216,7 +224,20 @@ if (clearSelectionsBtn) clearSelectionsBtn.onclick = async () => {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
-  // reset local das refeições do dia
+  meals = [...baseMeals];
+  updateDay();
+};
+
+// ------------------- RESET SEMANA -------------------
+if (weekResetBtn) weekResetBtn.onclick = async () => {
+  if (!confirm("Deseja limpar a semana atual?")) return;
+
+  const snapshot = await getDocs(collection(db, "week"));
+  for (const docSnap of snapshot.docs) {
+    await deleteDoc(doc(db, "week", docSnap.id));
+  }
+
+  currentDay = 0;
   meals = [...baseMeals];
   updateDay();
 };
@@ -239,7 +260,6 @@ async function loadWeek() {
 }
 
 // ------------------- REAL TIME -------------------
-// listener para atualizar semana em tempo real
 onSnapshot(collection(db, "week"), snapshot => {
   snapshot.docChanges().forEach(change => {
     const idx = weekDays.indexOf(change.doc.id);
@@ -249,25 +269,20 @@ onSnapshot(collection(db, "week"), snapshot => {
     }
   });
 
-  // avançar o currentDay se houver consenso já definido
   while (currentDay < 7) {
     const dayDoc = snapshot.docs.find(d => d.id === weekDays[currentDay]);
-    if (!dayDoc) break; // ainda sem consenso
+    if (!dayDoc) break;
     currentDay++;
     meals = [...baseMeals];
   }
-
   updateDay();
 });
 
-// listener para atualizar escolhas em tempo real
 onSnapshot(collection(db, "preferences"), snapshot => {
-  // se houver alterações no dia atual, atualizar lista de refeições
   const prefsForDay = snapshot.docs
     .filter(d => d.data().day === weekDays[currentDay] && d.data().user === currentUser)
     .map(d => d.data().meal);
 
-  // remover refeições já escolhidas do loop local
   meals = baseMeals.filter(m => !prefsForDay.includes(m));
   updateDay();
 });
