@@ -22,6 +22,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ================= USER =================
+
 const USER_KEY = "mealprep_user";
 let currentUser = localStorage.getItem(USER_KEY);
 
@@ -31,18 +33,14 @@ function formatUser(user) {
   return "";
 }
 
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
-
 function updateUserIndicator() {
   document.getElementById("user-indicator").textContent = formatUser(currentUser);
 }
 
 function initUser() {
-  if (!currentUser) showScreen("user-select");
-  else {
+  if (!currentUser) {
+    showScreen("user-select");
+  } else {
     updateUserIndicator();
     showScreen("home");
   }
@@ -58,9 +56,19 @@ function setUser(user) {
 document.getElementById("selectHugo").onclick = () => setUser("hugo");
 document.getElementById("selectLucia").onclick = () => setUser("lucia");
 
-document.getElementById("btnEscolher").onclick = () => {
+// ================= NAVEGAÇÃO =================
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+document.getElementById("btnEscolher").onclick = async () => {
+  await syncCurrentDayFromWeek();
+  meals = [...baseMeals];
+  currentIndex = 0;
   showScreen("swipe");
-  resetMeals();
+  updateUI();
 };
 
 document.getElementById("btnSemana").onclick = async () => {
@@ -73,6 +81,8 @@ document.getElementById("btnHistorico").onclick = () => showScreen("history");
 document.getElementById("backFromSwipe").onclick = () => showScreen("home");
 document.getElementById("backFromWeek").onclick = () => showScreen("home");
 document.getElementById("backFromHistory").onclick = () => showScreen("home");
+
+// ================= DADOS =================
 
 const baseMeals = [
   "Frango com arroz",
@@ -98,16 +108,11 @@ let meals = [];
 let currentIndex = 0;
 let currentDay = 0;
 
+// ================= UI =================
+
 const mealName = document.getElementById("mealName");
 const currentDayDisplay = document.getElementById("currentDayDisplay");
 const buttons = document.getElementById("buttons");
-
-function resetMeals() {
-  meals = [...baseMeals];
-  currentIndex = 0;
-  currentDay = 0;
-  updateUI();
-}
 
 function updateUI() {
   if (currentDay >= 7) {
@@ -128,6 +133,17 @@ function updateUI() {
   currentDayDisplay.textContent = weekDays[currentDay];
   buttons.style.display = "flex";
 }
+
+// ================= SINCRONIZAR DIA ATUAL =================
+
+async function syncCurrentDayFromWeek() {
+  const snapshot = await getDocs(collection(db, "week"));
+
+  currentDay = snapshot.size; 
+  // se há 2 documentos na week -> estamos no dia 2 (terça já preenchida)
+}
+
+// ================= ESCOLHA =================
 
 document.getElementById("yesBtn").onclick = async () => {
   const selectedMeal = meals[currentIndex];
@@ -182,6 +198,8 @@ document.getElementById("noBtn").onclick = () => {
   updateUI();
 };
 
+// ================= LIMPAR ESCOLHAS DO DIA =================
+
 document.getElementById("clearSelectionsBtn").onclick = async () => {
   const snapshot = await getDocs(
     query(collection(db, "preferences"), where("day", "==", weekDays[currentDay]))
@@ -191,8 +209,12 @@ document.getElementById("clearSelectionsBtn").onclick = async () => {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
-  resetMeals();
+  meals = [...baseMeals];
+  currentIndex = 0;
+  updateUI();
 };
+
+// ================= LIMPAR SEMANA =================
 
 document.getElementById("clearWeekBtn").onclick = async () => {
   const snapshot = await getDocs(collection(db, "week"));
@@ -201,9 +223,15 @@ document.getElementById("clearWeekBtn").onclick = async () => {
     await deleteDoc(doc(db, "week", docSnap.id));
   }
 
-  resetMeals();
-  showScreen("home");
+  currentDay = 0;
+  meals = [...baseMeals];
+  currentIndex = 0;
+
+  showScreen("swipe");
+  updateUI();
 };
+
+// ================= SEMANA =================
 
 async function loadWeek() {
   for (let i = 0; i < 7; i++) {
