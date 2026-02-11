@@ -36,7 +36,8 @@ function formatUser(user) {
 // ------------------- SPA NAVIGATION -------------------
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+  const screen = document.getElementById(id);
+  if (screen) screen.classList.add("active");
 }
 
 function initUser() {
@@ -56,24 +57,31 @@ function setUser(user) {
 }
 
 function updateUserIndicator() {
-  document.getElementById("user-indicator").textContent = formatUser(currentUser);
+  const indicator = document.getElementById("user-indicator");
+  if (indicator) indicator.textContent = formatUser(currentUser);
 }
 
-document.getElementById("selectHugo").onclick = () => setUser("hugo");
-document.getElementById("selectLucia").onclick = () => setUser("lucia");
+// ------------------- USER SELECT -------------------
+const selectHugo = document.getElementById("selectHugo");
+const selectLucia = document.getElementById("selectLucia");
 
-document.getElementById("btnEscolher").onclick = () => {
-  showScreen("swipe");
-  updateDay();
-};
-document.getElementById("btnSemana").onclick = () => {
-  showScreen("week");
-  loadWeek();
-};
-document.getElementById("btnHistorico").onclick = () => showScreen("history");
-document.getElementById("backFromSwipe").onclick = () => showScreen("home");
-document.getElementById("backFromWeek").onclick = () => showScreen("home");
-document.getElementById("backFromHistory").onclick = () => showScreen("home");
+if (selectHugo) selectHugo.onclick = () => setUser("hugo");
+if (selectLucia) selectLucia.onclick = () => setUser("lucia");
+
+// ------------------- NAVIGATION -------------------
+const btnEscolher = document.getElementById("btnEscolher");
+const btnSemana = document.getElementById("btnSemana");
+const btnHistorico = document.getElementById("btnHistorico");
+const backFromSwipe = document.getElementById("backFromSwipe");
+const backFromWeek = document.getElementById("backFromWeek");
+const backFromHistory = document.getElementById("backFromHistory");
+
+if (btnEscolher) btnEscolher.onclick = () => { showScreen("swipe"); updateDay(); };
+if (btnSemana) btnSemana.onclick = () => { showScreen("week"); loadWeek(); };
+if (btnHistorico) btnHistorico.onclick = () => showScreen("history");
+if (backFromSwipe) backFromSwipe.onclick = () => showScreen("home");
+if (backFromWeek) backFromWeek.onclick = () => showScreen("home");
+if (backFromHistory) backFromHistory.onclick = () => showScreen("home");
 
 // ------------------- DADOS -------------------
 const baseMeals = [
@@ -105,18 +113,20 @@ let currentDay = 0;
 const mealName = document.getElementById("mealName");
 const currentDayDisplay = document.getElementById("currentDayDisplay");
 const buttons = document.getElementById("buttons");
-const clearSelectionsBtn = document.getElementById("clearSelectionsBtn");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
 
 // ------------------- UI -------------------
 function highlightDay() {
   for (let i = 0; i < 7; i++) {
-    document
-      .getElementById(`day-row-${i}`)
-      .classList.toggle("active", i === currentDay);
+    const row = document.getElementById(`day-row-${i}`);
+    if (row) row.classList.toggle("active", i === currentDay);
   }
 }
 
 function updateDay() {
+  if (!mealName || !currentDayDisplay || !buttons) return;
+
   if (currentDay >= 7) {
     mealName.textContent = "Semana concluída 👌";
     currentDayDisplay.textContent = "";
@@ -160,14 +170,11 @@ async function checkConsensus(day) {
     const chosen =
       intersection[Math.floor(Math.random() * intersection.length)];
 
-    await setDoc(doc(db, "week", day), {
-      meal: chosen
-    });
+    await setDoc(doc(db, "week", day), { meal: chosen });
 
-    // apagar preferências desse dia
-    snapshot.forEach(async docSnap => {
+    for (const docSnap of snapshot.docs) {
       await deleteDoc(doc(db, "preferences", docSnap.id));
-    });
+    }
 
     return true;
   }
@@ -183,11 +190,7 @@ async function chooseMeal(isLike) {
 
   if (isLike) {
     await setDoc(
-      doc(
-        db,
-        "preferences",
-        `${currentUser}_${currentDay}_${selectedMeal}`
-      ),
+      doc(db, "preferences", `${currentUser}_${currentDay}_${selectedMeal}`),
       {
         user: currentUser,
         day: weekDays[currentDay],
@@ -211,35 +214,14 @@ async function chooseMeal(isLike) {
   }
 
   if (currentIndex >= meals.length) currentIndex = 0;
-
   updateDay();
 }
-
-// ------------------- LIMPAR DIA -------------------
-async function clearSelectionsForDay() {
-  const snapshot = await getDocs(
-    query(
-      collection(db, "preferences"),
-      where("day", "==", weekDays[currentDay]),
-      where("user", "==", currentUser)
-    )
-  );
-
-  for (const docSnap of snapshot.docs) {
-    await deleteDoc(doc(db, "preferences", docSnap.id));
-  }
-
-  meals = [...baseMeals];
-  currentIndex = 0;
-  updateDay();
-}
-
-clearSelectionsBtn.onclick = clearSelectionsForDay;
 
 // ------------------- SEMANA -------------------
 async function loadWeek() {
   for (let i = 0; i < 7; i++) {
-    document.getElementById(`day-${i}`).textContent = "—";
+    const el = document.getElementById(`day-${i}`);
+    if (el) el.textContent = "—";
   }
 
   const snapshot = await getDocs(collection(db, "week"));
@@ -247,15 +229,15 @@ async function loadWeek() {
   snapshot.forEach(docSnap => {
     const idx = weekDays.indexOf(docSnap.id);
     if (idx >= 0) {
-      document.getElementById(`day-${idx}`).textContent =
-        docSnap.data().meal;
+      const el = document.getElementById(`day-${idx}`);
+      if (el) el.textContent = docSnap.data().meal;
     }
   });
 }
 
 // ------------------- EVENTOS -------------------
-document.getElementById("yesBtn").onclick = () => chooseMeal(true);
-document.getElementById("noBtn").onclick = () => chooseMeal(false);
+if (yesBtn) yesBtn.onclick = () => chooseMeal(true);
+if (noBtn) noBtn.onclick = () => chooseMeal(false);
 
 // ------------------- INIT -------------------
 initUser();
