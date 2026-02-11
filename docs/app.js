@@ -33,56 +33,6 @@ function formatUser(user) {
   return "";
 }
 
-// ------------------- SPA NAVIGATION -------------------
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  const screen = document.getElementById(id);
-  if (screen) screen.classList.add("active");
-}
-
-function initUser() {
-  if (!currentUser) {
-    showScreen("user-select");
-  } else {
-    updateUserIndicator();
-    showScreen("home");
-  }
-}
-
-function setUser(user) {
-  localStorage.setItem(USER_KEY, user);
-  currentUser = user;
-  updateUserIndicator();
-  showScreen("home");
-}
-
-function updateUserIndicator() {
-  const indicator = document.getElementById("user-indicator");
-  if (indicator) indicator.textContent = formatUser(currentUser);
-}
-
-// ------------------- USER SELECT -------------------
-const selectHugo = document.getElementById("selectHugo");
-const selectLucia = document.getElementById("selectLucia");
-
-if (selectHugo) selectHugo.onclick = () => setUser("hugo");
-if (selectLucia) selectLucia.onclick = () => setUser("lucia");
-
-// ------------------- NAVIGATION -------------------
-const btnEscolher = document.getElementById("btnEscolher");
-const btnSemana = document.getElementById("btnSemana");
-const btnHistorico = document.getElementById("btnHistorico");
-const backFromSwipe = document.getElementById("backFromSwipe");
-const backFromWeek = document.getElementById("backFromWeek");
-const backFromHistory = document.getElementById("backFromHistory");
-
-if (btnEscolher) btnEscolher.onclick = () => { showScreen("swipe"); updateDay(); };
-if (btnSemana) btnSemana.onclick = () => { showScreen("week"); loadWeek(); };
-if (btnHistorico) btnHistorico.onclick = () => showScreen("history");
-if (backFromSwipe) backFromSwipe.onclick = () => showScreen("home");
-if (backFromWeek) backFromWeek.onclick = () => showScreen("home");
-if (backFromHistory) backFromHistory.onclick = () => showScreen("home");
-
 // ------------------- DADOS -------------------
 const baseMeals = [
   "Frango com arroz",
@@ -117,11 +67,31 @@ const yesBtn = document.getElementById("yesBtn");
 const noBtn = document.getElementById("noBtn");
 
 // ------------------- UI -------------------
-function highlightDay() {
-  for (let i = 0; i < 7; i++) {
-    const row = document.getElementById(`day-row-${i}`);
-    if (row) row.classList.toggle("active", i === currentDay);
+function updateUserIndicator() {
+  const indicator = document.getElementById("user-indicator");
+  if (indicator) indicator.textContent = formatUser(currentUser);
+}
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  const screen = document.getElementById(id);
+  if (screen) screen.classList.add("active");
+}
+
+function initUser() {
+  if (!currentUser) {
+    showScreen("user-select");
+  } else {
+    updateUserIndicator();
+    showScreen("home");
   }
+}
+
+function setUser(user) {
+  localStorage.setItem(USER_KEY, user);
+  currentUser = user;
+  updateUserIndicator();
+  showScreen("home");
 }
 
 function updateDay() {
@@ -136,41 +106,37 @@ function updateDay() {
 
   if (meals.length === 0) {
     mealName.textContent = "Já não há mais refeições chefe!";
-    currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
+    currentDayDisplay.textContent = weekDays[currentDay];
     buttons.style.display = "none";
     return;
   }
 
-  buttons.style.display = "flex";
+  if (currentIndex >= meals.length) currentIndex = 0;
+
   mealName.textContent = meals[currentIndex];
-  currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
-  highlightDay();
+  currentDayDisplay.textContent = weekDays[currentDay];
+  buttons.style.display = "flex";
 }
 
 // ------------------- CONSENSO -------------------
-async function checkConsensus(day) {
+async function checkConsensus(dayName) {
   const snapshot = await getDocs(
-    query(collection(db, "preferences"), where("day", "==", day))
+    query(collection(db, "preferences"), where("day", "==", dayName))
   );
 
-  const hugoMeals = [];
-  const luciaMeals = [];
+  const hugo = [];
+  const lucia = [];
 
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
-    if (data.user === "hugo") hugoMeals.push(data.meal);
-    if (data.user === "lucia") luciaMeals.push(data.meal);
+    if (data.user === "hugo") hugo.push(data.meal);
+    if (data.user === "lucia") lucia.push(data.meal);
   });
 
-  const intersection = hugoMeals.filter(meal =>
-    luciaMeals.includes(meal)
-  );
+  const match = hugo.find(meal => lucia.includes(meal));
 
-  if (intersection.length > 0) {
-    const chosen =
-      intersection[Math.floor(Math.random() * intersection.length)];
-
-    await setDoc(doc(db, "week", day), { meal: chosen });
+  if (match) {
+    await setDoc(doc(db, "week", dayName), { meal: match });
 
     for (const docSnap of snapshot.docs) {
       await deleteDoc(doc(db, "preferences", docSnap.id));
@@ -182,11 +148,13 @@ async function checkConsensus(day) {
   return false;
 }
 
-// ------------------- ESCOLHA -------------------
+// ------------------- ESCOLHER -------------------
 async function chooseMeal(isLike) {
   if (currentDay >= 7) return;
+  if (meals.length === 0) return;
 
   const selectedMeal = meals[currentIndex];
+  if (!selectedMeal) return;
 
   if (isLike) {
     await setDoc(
@@ -210,7 +178,7 @@ async function chooseMeal(isLike) {
 
     meals.splice(currentIndex, 1);
   } else {
-    meals.push(meals.splice(currentIndex, 1)[0]);
+    currentIndex++;
   }
 
   if (currentIndex >= meals.length) currentIndex = 0;
@@ -235,9 +203,30 @@ async function loadWeek() {
   });
 }
 
-// ------------------- EVENTOS -------------------
-if (yesBtn) yesBtn.onclick = () => chooseMeal(true);
-if (noBtn) noBtn.onclick = () => chooseMeal(false);
+// ------------------- NAVIGATION -------------------
+document.getElementById("selectHugo")?.addEventListener("click", () => setUser("hugo"));
+document.getElementById("selectLucia")?.addEventListener("click", () => setUser("lucia"));
+
+document.getElementById("btnEscolher")?.addEventListener("click", () => {
+  showScreen("swipe");
+  updateDay();
+});
+
+document.getElementById("btnSemana")?.addEventListener("click", async () => {
+  showScreen("week");
+  await loadWeek();
+});
+
+document.getElementById("btnHistorico")?.addEventListener("click", () => {
+  showScreen("history");
+});
+
+document.getElementById("backFromSwipe")?.addEventListener("click", () => showScreen("home"));
+document.getElementById("backFromWeek")?.addEventListener("click", () => showScreen("home"));
+document.getElementById("backFromHistory")?.addEventListener("click", () => showScreen("home"));
+
+yesBtn?.addEventListener("click", () => chooseMeal(true));
+noBtn?.addEventListener("click", () => chooseMeal(false));
 
 // ------------------- INIT -------------------
 initUser();
