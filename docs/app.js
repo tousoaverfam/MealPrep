@@ -1,142 +1,148 @@
-document.addEventListener("DOMContentLoaded", () => {
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js").then(({ initializeApp }) => {
-    import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js").then(
-      ({ getFirestore, doc, setDoc, collection, getDocs, deleteDoc }) => {
+const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "testemeals.firebaseapp.com",
+  projectId: "testemeals",
+  storageBucket: "testemeals.firebasestorage.app",
+  messagingSenderId: "467182854778",
+  appId: "1:467..."
+};
 
-        /* FIREBASE */
-        const app = initializeApp({
-          apiKey: "AIzaSyAZ4D0oRlCIwEEjRjPA2RauyxvIBFhzS-U",
-          authDomain: "testemeals.firebaseapp.com",
-          projectId: "testemeals"
-        });
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-        const db = getFirestore(app);
+const USER_KEY = "mealprep_user";
+let currentUser = localStorage.getItem(USER_KEY);
 
-        /* USER */
-        const USER_KEY = "mealprep_user";
-        let currentUser = localStorage.getItem(USER_KEY);
+const mealsBase = [
+  "Frango com arroz",
+  "Massa à bolonhesa",
+  "Salmão grelhado",
+  "Stir-fry de legumes",
+  "Wrap de frango",
+  "Arroz de pato",
+  "Bowl vegetariano"
+];
 
-        const indicator = document.getElementById("user-indicator");
+let meals = [...mealsBase];
 
-        function updateUserIndicator() {
-          indicator.textContent = currentUser ? currentUser : "";
-        }
+const weekDays = [
+  "Segunda",
+  "Terça",
+  "Quarta",
+  "Quinta",
+  "Sexta",
+  "Sábado",
+  "Domingo"
+];
 
-        function setUser(user) {
-          currentUser = user;
-          localStorage.setItem(USER_KEY, user);
-          updateUserIndicator();
-          showScreen("home");
-        }
+let currentIndex = 0;
+let currentDay = 0;
 
-        /* SCREENS */
-        function showScreen(id) {
-          document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-          document.getElementById(id).classList.add("active");
-        }
+const mealName = document.getElementById("mealName");
+const dayDisplay = document.getElementById("currentDayDisplay");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const resetDayBtn = document.getElementById("resetDayBtn");
 
-        function initUser() {
-          if (!currentUser) {
-            showScreen("user-select");
-          } else {
-            updateUserIndicator();
-            showScreen("home");
-          }
-        }
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
 
-        /* DATA */
-        const ORIGINAL_MEALS = [
-          "Frango com arroz",
-          "Massa à bolonhesa",
-          "Salmão grelhado",
-          "Stir-fry de legumes",
-          "Wrap de frango",
-          "Arroz de pato",
-          "Bowl vegetariano"
-        ];
+function updateUserIndicator(){
+  const indicator = document.getElementById("user-indicator");
+  if(!currentUser){ indicator.textContent=""; return; }
+  indicator.textContent = currentUser === "hugo" ? "Hugo" : "Lúcia";
+}
 
-        const weekDays = [
-          "Segunda-feira","Terça-feira","Quarta-feira",
-          "Quinta-feira","Sexta-feira","Sábado","Domingo"
-        ];
+function setUser(user){
+  currentUser = user;
+  localStorage.setItem(USER_KEY,user);
+  updateUserIndicator();
+  showScreen("home");
+}
 
-        let meals = [...ORIGINAL_MEALS];
-        let currentIndex = 0;
-        let currentDay = 0;
+function init(){
+  if(!currentUser){
+    showScreen("user-select");
+  } else {
+    updateUserIndicator();
+    showScreen("home");
+  }
+}
 
-        /* ELEMENTS */
-        const mealName = document.getElementById("mealName");
-        const currentDayDisplay = document.getElementById("currentDayDisplay");
-        const buttons = document.getElementById("buttons");
+function updateMeal(){
+  if(currentIndex >= meals.length){
+    mealName.textContent = "Já não há mais refeições chefe!";
+    yesBtn.style.display="none";
+    noBtn.style.display="none";
+    return;
+  }
 
-        function updateDay() {
-          currentDayDisplay.textContent = `Dia: ${weekDays[currentDay]}`;
+  yesBtn.style.display="inline-block";
+  noBtn.style.display="inline-block";
 
-          if (meals.length === 0) {
-            mealName.textContent = "Já não há mais refeições chefe!";
-            buttons.style.display = "none";
-            return;
-          }
+  mealName.textContent = meals[currentIndex];
+  dayDisplay.textContent = weekDays[currentDay];
+}
 
-          buttons.style.display = "flex";
-          mealName.textContent = meals[currentIndex];
-        }
+async function chooseMeal(like){
+  const meal = meals[currentIndex];
 
-        async function chooseMeal(isLike) {
-          const meal = meals[currentIndex];
+  if(like){
+    await setDoc(doc(db,"preferences",`${currentUser}_${currentDay}_${meal}`),{
+      user: currentUser,
+      day: currentDay,
+      meal: meal
+    });
+    meals.splice(currentIndex,1);
+  } else {
+    currentIndex++;
+  }
 
-          if (isLike) {
-            await setDoc(
-              doc(db, "preferences", `${weekDays[currentDay]}_${currentUser}_${meal}`),
-              { user: currentUser, day: weekDays[currentDay], meal }
-            );
-            meals.splice(currentIndex, 1);
-          } else {
-            meals.push(meals.splice(currentIndex, 1)[0]);
-          }
+  updateMeal();
+}
 
-          if (currentIndex >= meals.length) currentIndex = 0;
-          updateDay();
-        }
+async function resetDay(){
+  const q = query(collection(db,"preferences"),
+    where("user","==",currentUser),
+    where("day","==",currentDay)
+  );
 
-        async function resetDay() {
-          const snapshot = await getDocs(collection(db, "preferences"));
-          snapshot.forEach(d => {
-            if (d.id.startsWith(`${weekDays[currentDay]}_${currentUser}_`)) {
-              deleteDoc(doc(db, "preferences", d.id));
-            }
-          });
+  const snap = await getDocs(q);
+  for(const d of snap.docs){
+    await deleteDoc(d.ref);
+  }
 
-          meals = [...ORIGINAL_MEALS];
-          currentIndex = 0;
-          updateDay();
-        }
+  meals = [...mealsBase];
+  currentIndex = 0;
+  updateMeal();
+}
 
-        /* EVENTS */
-        document.getElementById("selectHugo").onclick = () => setUser("Hugo");
-        document.getElementById("selectLucia").onclick = () => setUser("Lúcia");
-
-        document.getElementById("btnEscolher").onclick = () => {
-          showScreen("swipe");
-          updateDay();
-        };
-        document.getElementById("btnSemana").onclick = () => showScreen("week");
-        document.getElementById("btnHistorico").onclick = () => showScreen("history");
-
-        document.getElementById("backFromSwipe").onclick = () => showScreen("home");
-        document.getElementById("backFromWeek").onclick = () => showScreen("home");
-        document.getElementById("backFromHistory").onclick = () => showScreen("home");
-
-        document.getElementById("yesBtn").onclick = () => chooseMeal(true);
-        document.getElementById("noBtn").onclick = () => chooseMeal(false);
-        document.getElementById("resetDayBtn").onclick = resetDay;
-
-        /* INIT */
-        initUser();
-        updateDay();
-      }
-    );
+async function loadWeek(){
+  showScreen("week");
+  const snap = await getDocs(collection(db,"week"));
+  snap.forEach(d=>{
+    document.getElementById(`day-${d.data().day}`).textContent = d.data().meal;
   });
+}
 
-});
+document.getElementById("selectHugo").onclick=()=>setUser("hugo");
+document.getElementById("selectLucia").onclick=()=>setUser("lucia");
+
+document.getElementById("btnEscolher").onclick=()=>{showScreen("swipe");updateMeal();};
+document.getElementById("btnSemana").onclick=loadWeek;
+document.getElementById("btnHistorico").onclick=()=>showScreen("history");
+
+document.getElementById("backFromSwipe").onclick=()=>showScreen("home");
+document.getElementById("backFromWeek").onclick=()=>showScreen("home");
+document.getElementById("backFromHistory").onclick=()=>showScreen("home");
+
+yesBtn.onclick=()=>chooseMeal(true);
+noBtn.onclick=()=>chooseMeal(false);
+resetDayBtn.onclick=resetDay;
+
+init();
