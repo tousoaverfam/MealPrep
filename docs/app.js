@@ -34,55 +34,49 @@ function formatUser(user) {
   return "";
 }
 
-// ------------------- SPA NAVIGATION -------------------
+function updateUserIndicator() {
+  const el = document.getElementById("user-indicator");
+  if (el) el.textContent = formatUser(currentUser);
+}
+
+// ------------------- SCREENS -------------------
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  const screen = document.getElementById(id);
-  if (screen) screen.classList.add("active");
-}
-
-function initUser() {
-  if (!currentUser) {
-    showScreen("user-select");
-  } else {
-    updateUserIndicator();
-    showScreen("home");
-  }
-}
-
-function setUser(user) {
-  localStorage.setItem(USER_KEY, user);
-  currentUser = user;
-  updateUserIndicator();
-  showScreen("home");
-}
-
-function updateUserIndicator() {
-  const indicator = document.getElementById("user-indicator");
-  if (indicator) indicator.textContent = formatUser(currentUser);
+  document.getElementById(id)?.classList.add("active");
 }
 
 // ------------------- USER SELECT -------------------
-const selectHugo = document.getElementById("selectHugo");
-const selectLucia = document.getElementById("selectLucia");
+document.getElementById("selectHugo")?.addEventListener("click", () => {
+  localStorage.setItem(USER_KEY, "hugo");
+  currentUser = "hugo";
+  updateUserIndicator();
+  showScreen("home");
+});
 
-if (selectHugo) selectHugo.onclick = () => setUser("hugo");
-if (selectLucia) selectLucia.onclick = () => setUser("lucia");
+document.getElementById("selectLucia")?.addEventListener("click", () => {
+  localStorage.setItem(USER_KEY, "lucia");
+  currentUser = "lucia";
+  updateUserIndicator();
+  showScreen("home");
+});
 
-// ------------------- NAVIGATION -------------------
-const btnEscolher = document.getElementById("btnEscolher");
-const btnSemana = document.getElementById("btnSemana");
-const btnHistorico = document.getElementById("btnHistorico");
-const backFromSwipe = document.getElementById("backFromSwipe");
-const backFromWeek = document.getElementById("backFromWeek");
-const backFromHistory = document.getElementById("backFromHistory");
+// ------------------- NAV -------------------
+document.getElementById("btnEscolher")?.addEventListener("click", () => {
+  showScreen("swipe");
+  updateDay();
+});
 
-if (btnEscolher) btnEscolher.onclick = () => { showScreen("swipe"); updateDay(); };
-if (btnSemana) btnSemana.onclick = () => { showScreen("week"); loadWeek(); };
-if (btnHistorico) btnHistorico.onclick = () => showScreen("history");
-if (backFromSwipe) backFromSwipe.onclick = () => showScreen("home");
-if (backFromWeek) backFromWeek.onclick = () => showScreen("home");
-if (backFromHistory) backFromHistory.onclick = () => showScreen("home");
+document.getElementById("btnSemana")?.addEventListener("click", () => {
+  showScreen("week");
+});
+
+document.getElementById("btnHistorico")?.addEventListener("click", () => {
+  showScreen("history");
+});
+
+document.getElementById("backFromSwipe")?.addEventListener("click", () => showScreen("home"));
+document.getElementById("backFromWeek")?.addEventListener("click", () => showScreen("home"));
+document.getElementById("backFromHistory")?.addEventListener("click", () => showScreen("home"));
 
 // ------------------- DADOS -------------------
 const baseMeals = [
@@ -96,6 +90,7 @@ const baseMeals = [
 ];
 
 let meals = [...baseMeals];
+
 const weekDays = [
   "Segunda-feira",
   "Terça-feira",
@@ -106,46 +101,43 @@ const weekDays = [
   "Domingo"
 ];
 
-let currentIndex = 0;
 let currentDay = 0;
+let currentIndex = 0;
+let processing = false;
 
 // ------------------- ELEMENTOS -------------------
 const mealName = document.getElementById("mealName");
 const currentDayDisplay = document.getElementById("currentDayDisplay");
-const buttons = document.getElementById("buttons");
 const yesBtn = document.getElementById("yesBtn");
 const noBtn = document.getElementById("noBtn");
 const clearSelectionsBtn = document.getElementById("clearSelectionsBtn");
+const clearWeekBtn = document.getElementById("clearWeekBtn");
 
 // ------------------- UI -------------------
-function highlightDay() {
-  for (let i = 0; i < 7; i++) {
-    const row = document.getElementById(`day-row-${i}`);
-    if (row) row.classList.toggle("active", i === currentDay);
-  }
-}
-
 function updateDay() {
-  if (!mealName || !currentDayDisplay || !buttons) return;
+  if (!mealName) return;
 
   if (currentDay >= 7) {
     mealName.textContent = "Semana concluída 👌";
     currentDayDisplay.textContent = "";
-    buttons.style.display = "none";
+    yesBtn.style.display = "none";
+    noBtn.style.display = "none";
     return;
   }
 
   if (meals.length === 0) {
     mealName.textContent = "Já não há mais refeições chefe!";
-    currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
-    buttons.style.display = "none";
+    currentDayDisplay.textContent = weekDays[currentDay];
+    yesBtn.style.display = "none";
+    noBtn.style.display = "none";
     return;
   }
 
-  buttons.style.display = "flex";
+  yesBtn.style.display = "inline-block";
+  noBtn.style.display = "inline-block";
+
   mealName.textContent = meals[currentIndex];
-  currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
-  highlightDay();
+  currentDayDisplay.textContent = weekDays[currentDay];
 }
 
 // ------------------- CONSENSO -------------------
@@ -154,28 +146,23 @@ async function checkConsensus(day) {
     query(collection(db, "preferences"), where("day", "==", day))
   );
 
-  const hugoMeals = [];
-  const luciaMeals = [];
+  const hugo = [];
+  const lucia = [];
 
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.user === "hugo") hugoMeals.push(data.meal);
-    if (data.user === "lucia") luciaMeals.push(data.meal);
+  snapshot.forEach(d => {
+    const data = d.data();
+    if (data.user === "hugo") hugo.push(data.meal);
+    if (data.user === "lucia") lucia.push(data.meal);
   });
 
-  const intersection = hugoMeals.filter(meal =>
-    luciaMeals.includes(meal)
-  );
+  const intersection = hugo.filter(m => lucia.includes(m));
 
   if (intersection.length > 0) {
-    const chosen =
-      intersection[Math.floor(Math.random() * intersection.length)];
+    const chosen = intersection[Math.floor(Math.random() * intersection.length)];
 
     await setDoc(doc(db, "week", day), { meal: chosen });
 
-    for (const docSnap of snapshot.docs) {
-      await deleteDoc(doc(db, "preferences", docSnap.id));
-    }
+    snapshot.forEach(d => deleteDoc(doc(db, "preferences", d.id)));
 
     return true;
   }
@@ -184,23 +171,17 @@ async function checkConsensus(day) {
 }
 
 // ------------------- ESCOLHA -------------------
-let processingChoice = false; // previne duplo clique
-
 async function chooseMeal(isLike) {
-  if (currentDay >= 7 || processingChoice) return;
-  processingChoice = true;
+  if (processing) return;
+  processing = true;
 
-  const selectedMeal = meals[currentIndex];
-  if (!selectedMeal) { processingChoice = false; return; }
+  const meal = meals[currentIndex];
+  if (!meal) { processing = false; return; }
 
   if (isLike) {
     await setDoc(
-      doc(db, "preferences", `${currentUser}_${currentDay}_${selectedMeal}`),
-      {
-        user: currentUser,
-        day: weekDays[currentDay],
-        meal: selectedMeal
-      }
+      doc(db, "preferences", `${currentUser}_${currentDay}_${meal}`),
+      { user: currentUser, day: weekDays[currentDay], meal }
     );
 
     const consensus = await checkConsensus(weekDays[currentDay]);
@@ -210,7 +191,7 @@ async function chooseMeal(isLike) {
       meals = [...baseMeals];
       currentIndex = 0;
       updateDay();
-      processingChoice = false;
+      processing = false;
       return;
     }
 
@@ -220,80 +201,83 @@ async function chooseMeal(isLike) {
   }
 
   if (currentIndex >= meals.length) currentIndex = 0;
+
   updateDay();
-  processingChoice = false;
+  processing = false;
 }
 
-// ------------------- LIMPAR SELEÇÕES -------------------
-if (clearSelectionsBtn) {
-  clearSelectionsBtn.onclick = async () => {
-    const snapshot = await getDocs(
-      query(collection(db, "preferences"), where("day", "==", weekDays[currentDay]))
-    );
+yesBtn?.addEventListener("click", () => chooseMeal(true));
+noBtn?.addEventListener("click", () => chooseMeal(false));
 
-    for (const docSnap of snapshot.docs) {
-      const data = docSnap.data();
-      if (data.user === currentUser) {
-        await deleteDoc(doc(db, "preferences", docSnap.id));
-      }
-    }
+// ------------------- LIMPAR ESCOLHAS DO DIA -------------------
+clearSelectionsBtn?.addEventListener("click", async () => {
 
-    meals = [...baseMeals];
-    currentIndex = 0;
-    updateDay();
-  };
-}
+  const snapshot = await getDocs(
+    query(collection(db, "preferences"), where("day", "==", weekDays[currentDay]))
+  );
 
-// ------------------- SEMANA -------------------
-async function loadWeek() {
-  for (let i = 0; i < 7; i++) {
-    const el = document.getElementById(`day-${i}`);
-    if (el) el.textContent = "—";
-  }
-
-  const snapshot = await getDocs(collection(db, "week"));
-  snapshot.forEach(docSnap => {
-    const idx = weekDays.indexOf(docSnap.id);
-    if (idx >= 0) {
-      const el = document.getElementById(`day-${idx}`);
-      if (el) el.textContent = docSnap.data().meal;
+  snapshot.forEach(d => {
+    if (d.data().user === currentUser) {
+      deleteDoc(doc(db, "preferences", d.id));
     }
   });
-}
 
-// ------------------- RESET SEMANA -------------------
-const resetWeekBtn = document.createElement("button");
-resetWeekBtn.textContent = "Limpar semana";
-resetWeekBtn.className = "clear-btn";
-resetWeekBtn.style.marginTop = "12px";
-
-document.getElementById("week")?.appendChild(resetWeekBtn);
-
-resetWeekBtn.onclick = async () => {
-  // Limpa week
-  const snapshot = await getDocs(collection(db, "week"));
-  for (const docSnap of snapshot.docs) {
-    await deleteDoc(doc(db, "week", docSnap.id));
-  }
-
-  // Limpa preferências
-  const prefsSnap = await getDocs(collection(db, "preferences"));
-  for (const docSnap of prefsSnap.docs) {
-    await deleteDoc(doc(db, "preferences", docSnap.id));
-  }
-
-  // Reset UI
-  currentDay = 0;
   meals = [...baseMeals];
   currentIndex = 0;
   updateDay();
-  loadWeek();
-};
+});
 
-// ------------------- EVENTOS -------------------
-if (yesBtn) yesBtn.onclick = () => chooseMeal(true);
-if (noBtn) noBtn.onclick = () => chooseMeal(false);
+// ------------------- LIMPAR SEMANA -------------------
+clearWeekBtn?.addEventListener("click", async () => {
+
+  // apagar week
+  const weekSnap = await getDocs(collection(db, "week"));
+  weekSnap.forEach(d => deleteDoc(doc(db, "week", d.id)));
+
+  // apagar preferences
+  const prefSnap = await getDocs(collection(db, "preferences"));
+  prefSnap.forEach(d => deleteDoc(doc(db, "preferences", d.id)));
+
+  // reset local
+  currentDay = 0;
+  meals = [...baseMeals];
+  currentIndex = 0;
+
+  updateDay();
+});
+
+// ------------------- REALTIME LISTENER -------------------
+onSnapshot(collection(db, "week"), snapshot => {
+
+  const chosenDays = [];
+
+  snapshot.forEach(docSnap => {
+    const idx = weekDays.indexOf(docSnap.id);
+    if (idx >= 0) {
+      chosenDays.push(idx);
+      document.getElementById(`day-${idx}`).textContent = docSnap.data().meal;
+    }
+  });
+
+  // Atualiza automaticamente o dia atual
+  if (chosenDays.length > 0) {
+    currentDay = Math.max(...chosenDays) + 1;
+  } else {
+    currentDay = 0;
+  }
+
+  meals = [...baseMeals];
+  currentIndex = 0;
+
+  updateDay();
+});
 
 // ------------------- INIT -------------------
-initUser();
+if (!currentUser) {
+  showScreen("user-select");
+} else {
+  updateUserIndicator();
+  showScreen("home");
+}
+
 updateDay();
