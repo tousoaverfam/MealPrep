@@ -45,6 +45,8 @@ const baseMeals = [
 ];
 
 let meals = [...baseMeals];
+let currentIndex = 0;
+let currentDay = 0;
 
 const weekDays = [
   "Segunda-feira",
@@ -56,47 +58,38 @@ const weekDays = [
   "Domingo"
 ];
 
-let currentIndex = 0;
-let currentDay = 0;
-
 // ------------------- ELEMENTOS -------------------
 const mealName = document.getElementById("mealName");
 const currentDayDisplay = document.getElementById("currentDayDisplay");
 const buttons = document.getElementById("buttons");
 const yesBtn = document.getElementById("yesBtn");
 const noBtn = document.getElementById("noBtn");
+const clearDayBtn = document.getElementById("clearDayBtn");
+const resetWeekBtn = document.getElementById("resetWeekBtn");
 
-// ------------------- UI -------------------
+// ------------------- UTIL -------------------
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id)?.classList.add("active");
+}
+
 function updateUserIndicator() {
   const indicator = document.getElementById("user-indicator");
   if (indicator) indicator.textContent = formatUser(currentUser);
 }
 
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  const screen = document.getElementById(id);
-  if (screen) screen.classList.add("active");
+// ------------------- DETETAR PRIMEIRO DIA NÃO RESOLVIDO -------------------
+async function syncCurrentDay() {
+  const snapshot = await getDocs(collection(db, "week"));
+  const resolvedDays = snapshot.docs.map(d => d.id);
+
+  currentDay = weekDays.findIndex(day => !resolvedDays.includes(day));
+
+  if (currentDay === -1) currentDay = 7; // semana concluída
 }
 
-function initUser() {
-  if (!currentUser) {
-    showScreen("user-select");
-  } else {
-    updateUserIndicator();
-    showScreen("home");
-  }
-}
-
-function setUser(user) {
-  localStorage.setItem(USER_KEY, user);
-  currentUser = user;
-  updateUserIndicator();
-  showScreen("home");
-}
-
-function updateDay() {
-  if (!mealName || !currentDayDisplay || !buttons) return;
-
+// ------------------- UI -------------------
+function updateUI() {
   if (currentDay >= 7) {
     mealName.textContent = "Semana concluída 👌";
     currentDayDisplay.textContent = "";
@@ -169,10 +162,10 @@ async function chooseMeal(isLike) {
     const consensus = await checkConsensus(weekDays[currentDay]);
 
     if (consensus) {
-      currentDay++;
+      await syncCurrentDay();
       meals = [...baseMeals];
       currentIndex = 0;
-      updateDay();
+      updateUI();
       return;
     }
 
@@ -182,14 +175,54 @@ async function chooseMeal(isLike) {
   }
 
   if (currentIndex >= meals.length) currentIndex = 0;
-  updateDay();
+  updateUI();
 }
 
-// ------------------- SEMANA -------------------
+// ------------------- LIMPAR DIA -------------------
+async function clearCurrentDay() {
+  if (currentDay >= 7) return;
+
+  const dayName = weekDays[currentDay];
+
+  const weekDoc = await getDocs(query(collection(db, "week"), where("__name__", "==", dayName)));
+  if (!weekDoc.empty) return; // não apaga se já houver consenso
+
+  const snapshot = await getDocs(
+    query(collection(db, "preferences"), where("day", "==", dayName))
+  );
+
+  for (const docSnap of snapshot.docs) {
+    await deleteDoc(doc(db, "preferences", docSnap.id));
+  }
+
+  meals = [...baseMeals];
+  currentIndex = 0;
+  updateUI();
+}
+
+// ------------------- RESET SEMANA -------------------
+async function resetWeek() {
+  const weekSnap = await getDocs(collection(db, "week"));
+  for (const docSnap of weekSnap.docs) {
+    await deleteDoc(doc(db, "week", docSnap.id));
+  }
+
+  const prefSnap = await getDocs(collection(db, "preferences"));
+  for (const docSnap of prefSnap.docs) {
+    await deleteDoc(doc(db, "preferences", docSnap.id));
+  }
+
+  currentDay = 0;
+  meals = [...baseMeals];
+  currentIndex = 0;
+
+  updateUI();
+}
+
+// ------------------- SEMANA VIEW -------------------
 async function loadWeek() {
   for (let i = 0; i < 7; i++) {
-    const el = document.getElementById(`day-${i}`);
-    if (el) el.textContent = "—";
+    document.getElementById(`day-${i}`).textContent = "—";
   }
 
   const snapshot = await getDocs(collection(db, "week"));
@@ -197,19 +230,21 @@ async function loadWeek() {
   snapshot.forEach(docSnap => {
     const idx = weekDays.indexOf(docSnap.id);
     if (idx >= 0) {
-      const el = document.getElementById(`day-${idx}`);
-      if (el) el.textContent = docSnap.data().meal;
+      document.getElementById(`day-${idx}`).textContent = docSnap.data().meal;
     }
   });
 }
 
-// ------------------- NAVIGATION -------------------
-document.getElementById("selectHugo")?.addEventListener("click", () => setUser("hugo"));
-document.getElementById("selectLucia")?.addEventListener("click", () => setUser("lucia"));
+// ------------------- EVENTOS -------------------
+yesBtn?.addEventListener("click", () => chooseMeal(true));
+noBtn?.addEventListener("click", () => chooseMeal(false));
+clearDayBtn?.addEventListener("click", clearCurrentDay);
+resetWeekBtn?.addEventListener("click", resetWeek);
 
-document.getElementById("btnEscolher")?.addEventListener("click", () => {
+document.getElementById("btnEscolher")?.addEventListener("click", async () => {
+  await syncCurrentDay();
   showScreen("swipe");
-  updateDay();
+  updateUI();
 });
 
 document.getElementById("btnSemana")?.addEventListener("click", async () => {
@@ -217,17 +252,6 @@ document.getElementById("btnSemana")?.addEventListener("click", async () => {
   await loadWeek();
 });
 
-document.getElementById("btnHistorico")?.addEventListener("click", () => {
-  showScreen("history");
-});
-
-document.getElementById("backFromSwipe")?.addEventListener("click", () => showScreen("home"));
-document.getElementById("backFromWeek")?.addEventListener("click", () => showScreen("home"));
-document.getElementById("backFromHistory")?.addEventListener("click", () => showScreen("home"));
-
-yesBtn?.addEventListener("click", () => chooseMeal(true));
-noBtn?.addEventListener("click", () => chooseMeal(false));
-
 // ------------------- INIT -------------------
-initUser();
-updateDay();
+updateUserIndicator();
+syncCurrentDay().then(updateUI);
