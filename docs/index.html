@@ -6,6 +6,8 @@
   <title>Meal Prep</title>
 
   <link rel="stylesheet" href="./style.css" />
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#000000" />
 </head>
 
 <body>
@@ -43,12 +45,13 @@
         <p id="currentDayDisplay"></p>
       </div>
 
-      <div class="action-buttons">
+      <div class="action-buttons" id="buttons">
         <button class="yes-btn" id="yesBtn">Sim</button>
         <button class="no-btn" id="noBtn">Não</button>
       </div>
 
-      <button class="reset-day-btn" id="resetDayBtn">
+      <!-- BOTÃO LIMPAR -->
+      <button id="clearSelectionsBtn" class="clear-btn">
         Limpar escolhas do dia
       </button>
     </section>
@@ -61,13 +64,13 @@
       </header>
 
       <ul class="week-list">
-        <li><span>Segunda</span><strong id="day-0">—</strong></li>
-        <li><span>Terça</span><strong id="day-1">—</strong></li>
-        <li><span>Quarta</span><strong id="day-2">—</strong></li>
-        <li><span>Quinta</span><strong id="day-3">—</strong></li>
-        <li><span>Sexta</span><strong id="day-4">—</strong></li>
-        <li><span>Sábado</span><strong id="day-5">—</strong></li>
-        <li><span>Domingo</span><strong id="day-6">—</strong></li>
+        <li id="day-row-0"><span>Segunda</span><strong id="day-0">—</strong></li>
+        <li id="day-row-1"><span>Terça</span><strong id="day-1">—</strong></li>
+        <li id="day-row-2"><span>Quarta</span><strong id="day-2">—</strong></li>
+        <li id="day-row-3"><span>Quinta</span><strong id="day-3">—</strong></li>
+        <li id="day-row-4"><span>Sexta</span><strong id="day-4">—</strong></li>
+        <li id="day-row-5"><span>Sábado</span><strong id="day-5">—</strong></li>
+        <li id="day-row-6"><span>Domingo</span><strong id="day-6">—</strong></li>
       </ul>
     </section>
 
