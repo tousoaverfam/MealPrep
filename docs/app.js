@@ -183,7 +183,7 @@ async function checkConsensus(day) {
       await deleteDoc(doc(db, "preferences", docSnap.id));
     }
 
-    return chosen; // Retorna a refeição escolhida para atualizar UI
+    return chosen;
   }
 
   return null;
@@ -206,11 +206,16 @@ async function chooseMeal(isLike) {
 
     const consensusMeal = await checkConsensus(weekDays[currentDay]);
     if (consensusMeal) {
-      // Atualiza imediatamente a UI com o consenso
+      // Atualiza a UI imediatamente
       mealName.textContent = consensusMeal + " ✅";
       buttons.style.display = "none";
+
+      // Avança para o próximo dia
       currentDay++;
-      meals = baseMeals.filter(meal => !await getConsolidatedDays().then(c => c.map(x => x.meal)));
+      const consolidated = await getConsolidatedDays();
+      const usedMeals = consolidated.map(c => c.meal);
+      meals = baseMeals.filter(meal => !usedMeals.includes(meal));
+      currentIndex = 0;
       return;
     }
 
