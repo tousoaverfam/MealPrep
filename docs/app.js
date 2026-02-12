@@ -66,18 +66,8 @@ document.getElementById("selectHugo")?.addEventListener("click", () => setUser("
 document.getElementById("selectLucia")?.addEventListener("click", () => setUser("lucia"));
 
 // ------------------- NAVIGATION -------------------
-document.getElementById("btnEscolher")?.addEventListener("click", async () => {
-  showScreen("swipe");
-  setupSwipeButtons();
-  await syncCurrentDayFromDB();
-  await updateDay();
-});
-
-document.getElementById("btnSemana")?.addEventListener("click", () => {
-  showScreen("week");
-  loadWeek();
-});
-
+document.getElementById("btnEscolher")?.addEventListener("click", () => { showScreen("swipe"); updateDay(); });
+document.getElementById("btnSemana")?.addEventListener("click", () => { showScreen("week"); loadWeek(); });
 document.getElementById("btnHistorico")?.addEventListener("click", () => showScreen("history"));
 document.getElementById("backFromSwipe")?.addEventListener("click", () => showScreen("home"));
 document.getElementById("backFromWeek")?.addEventListener("click", () => showScreen("home"));
@@ -113,14 +103,10 @@ let currentIndex = 0;
 const mealName = document.getElementById("mealName");
 const currentDayDisplay = document.getElementById("currentDayDisplay");
 const buttons = document.getElementById("buttons");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
 const clearSelectionsBtn = document.getElementById("clearSelectionsBtn");
 const resetWeekBtn = document.getElementById("resetWeekBtn");
-
-// ------------------- SINCRONIZAR DIA -------------------
-async function syncCurrentDayFromDB() {
-  const snapshot = await getDocs(collection(db, "week"));
-  currentDay = snapshot.size;
-}
 
 // ------------------- UI -------------------
 function highlightDay() {
@@ -132,13 +118,19 @@ function highlightDay() {
 
 async function getConsolidatedDays() {
   const snapshot = await getDocs(collection(db, "week"));
-  return snapshot.docs.map(docSnap => ({ day: docSnap.id, meal: docSnap.data().meal }));
+  const consolidated = snapshot.docs.map(docSnap => docSnap.id);
+  return consolidated;
 }
 
 async function updateDay() {
   if (!mealName || !currentDayDisplay || !buttons) return;
 
-  await syncCurrentDayFromDB();
+  const consolidated = await getConsolidatedDays();
+
+  // Avança para o próximo dia sem consenso
+  while (currentDay < 7 && consolidated.includes(weekDays[currentDay])) {
+    currentDay++;
+  }
 
   if (currentDay >= 7) {
     mealName.textContent = "Semana concluída 👌";
@@ -146,12 +138,6 @@ async function updateDay() {
     buttons.style.display = "none";
     return;
   }
-
-  const consolidated = await getConsolidatedDays();
-  const usedMeals = consolidated.map(c => c.meal);
-
-  meals = baseMeals.filter(meal => !usedMeals.includes(meal));
-  currentIndex = 0;
 
   if (meals.length === 0) {
     mealName.textContent = "Já não há mais refeições chefe!";
@@ -191,16 +177,15 @@ async function checkConsensus(day) {
       await deleteDoc(doc(db, "preferences", docSnap.id));
     }
 
-    return chosen;
+    return true;
   }
 
-  return null;
+  return false;
 }
 
 // ------------------- ESCOLHA -------------------
 async function chooseMeal(isLike) {
   if (currentDay >= 7) return;
-
   const selectedMeal = meals[currentIndex];
 
   if (isLike) {
@@ -213,10 +198,12 @@ async function chooseMeal(isLike) {
       }
     );
 
-    const consensusMeal = await checkConsensus(weekDays[currentDay]);
-
-    if (consensusMeal) {
-      await updateDay(); // ← CORREÇÃO CRÍTICA
+    const consensus = await checkConsensus(weekDays[currentDay]);
+    if (consensus) {
+      currentDay++;
+      meals = [...baseMeals];
+      currentIndex = 0;
+      await updateDay();
       return;
     }
 
@@ -225,30 +212,29 @@ async function chooseMeal(isLike) {
     meals.push(meals.splice(currentIndex, 1)[0]);
   }
 
-  currentIndex = 0;
+  if (currentIndex >= meals.length) currentIndex = 0;
   await updateDay();
 }
 
 // ------------------- LIMPAR ESCOLHAS DO DIA -------------------
 clearSelectionsBtn?.addEventListener("click", async () => {
   if (currentDay >= 7) return;
-
   const snapshot = await getDocs(
-    query(collection(db, "preferences"),
-      where("day", "==", weekDays[currentDay]),
-      where("user", "==", currentUser))
+    query(collection(db, "preferences"), where("day", "==", weekDays[currentDay]), where("user", "==", currentUser))
   );
 
   for (const docSnap of snapshot.docs) {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
+  meals = [...baseMeals];
+  currentIndex = 0;
   await updateDay();
 });
 
-// ------------------- LIMPAR SEMANA -------------------
+// ------------------- RESET SEMANA -------------------
 resetWeekBtn?.addEventListener("click", async () => {
-  if (!confirm("Limpar toda a semana?")) return;
+  if (!confirm("Reset de toda a semana?")) return;
 
   const snapshot = await getDocs(collection(db, "week"));
   for (const docSnap of snapshot.docs) {
@@ -263,7 +249,6 @@ resetWeekBtn?.addEventListener("click", async () => {
   currentDay = 0;
   meals = [...baseMeals];
   currentIndex = 0;
-
   await updateDay();
   loadWeek();
 });
@@ -285,16 +270,10 @@ async function loadWeek() {
   });
 }
 
-// ------------------- BOTÕES -------------------
-function setupSwipeButtons() {
-  const yesBtn = document.getElementById("yesBtn");
-  const noBtn = document.getElementById("noBtn");
-
-  if (!yesBtn || !noBtn) return;
-
-  yesBtn.onclick = async () => await chooseMeal(true);
-  noBtn.onclick = async () => await chooseMeal(false);
-}
+// ------------------- EVENTOS -------------------
+yesBtn?.addEventListener("click", () => chooseMeal(true));
+noBtn?.addEventListener("click", () => chooseMeal(false));
 
 // ------------------- INIT -------------------
 initUser();
+updateDay();
