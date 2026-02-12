@@ -68,7 +68,7 @@ document.getElementById("selectLucia")?.addEventListener("click", () => setUser(
 // ------------------- NAVIGATION -------------------
 document.getElementById("btnEscolher")?.addEventListener("click", async () => {
   showScreen("swipe");
-  await setupSwipeButtons(); // garante que os listeners dos botões estão ativos
+  setupSwipeButtons(); // Garantir que os listeners estão ativos
   await updateDay();
 });
 
@@ -129,7 +129,6 @@ async function updateDay() {
 
   const consolidated = await getConsolidatedDays();
 
-  // Avança para o próximo dia sem consenso
   while (currentDay < 7 && consolidated.some(c => c.day === weekDays[currentDay])) {
     currentDay++;
   }
@@ -141,7 +140,6 @@ async function updateDay() {
     return;
   }
 
-  // Filtra refeições já escolhidas na semana
   const usedMeals = consolidated.map(c => c.meal);
   meals = baseMeals.filter(meal => !usedMeals.includes(meal));
   currentIndex = 0;
