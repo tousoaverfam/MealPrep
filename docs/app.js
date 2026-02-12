@@ -128,7 +128,6 @@ async function updateDay() {
 
   const consolidated = await getConsolidatedDays();
 
-  // Avança para o próximo dia sem consenso
   while (currentDay < 7 && consolidated.some(c => c.day === weekDays[currentDay])) {
     currentDay++;
   }
@@ -140,7 +139,6 @@ async function updateDay() {
     return;
   }
 
-  // Remove refeições já escolhidas na semana
   const usedMeals = consolidated.map(c => c.meal);
   meals = baseMeals.filter(meal => !usedMeals.includes(meal));
   currentIndex = 0;
@@ -206,11 +204,9 @@ async function chooseMeal(isLike) {
 
     const consensusMeal = await checkConsensus(weekDays[currentDay]);
     if (consensusMeal) {
-      // Atualiza a UI imediatamente
       mealName.textContent = consensusMeal + " ✅";
       buttons.style.display = "none";
 
-      // Avança para o próximo dia
       currentDay++;
       const consolidated = await getConsolidatedDays();
       const usedMeals = consolidated.map(c => c.meal);
@@ -247,9 +243,9 @@ clearSelectionsBtn?.addEventListener("click", async () => {
   await updateDay();
 });
 
-// ------------------- RESET SEMANA -------------------
+// ------------------- LIMPAR SEMANA -------------------
 resetWeekBtn?.addEventListener("click", async () => {
-  if (!confirm("Reset de toda a semana?")) return;
+  if (!confirm("Limpar toda a semana?")) return;
 
   const snapshot = await getDocs(collection(db, "week"));
   for (const docSnap of snapshot.docs) {
@@ -294,8 +290,3 @@ function setupSwipeButtons() {
 
   yesBtn.onclick = async () => await chooseMeal(true);
   noBtn.onclick = async () => await chooseMeal(false);
-}
-
-// ------------------- INIT -------------------
-initUser();
-updateDay();
