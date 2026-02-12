@@ -69,10 +69,15 @@ document.getElementById("selectLucia")?.addEventListener("click", () => setUser(
 document.getElementById("btnEscolher")?.addEventListener("click", async () => {
   showScreen("swipe");
   setupSwipeButtons();
+  await syncCurrentDayFromDB();
   await updateDay();
 });
 
-document.getElementById("btnSemana")?.addEventListener("click", () => { showScreen("week"); loadWeek(); });
+document.getElementById("btnSemana")?.addEventListener("click", () => {
+  showScreen("week");
+  loadWeek();
+});
+
 document.getElementById("btnHistorico")?.addEventListener("click", () => showScreen("history"));
 document.getElementById("backFromSwipe")?.addEventListener("click", () => showScreen("home"));
 document.getElementById("backFromWeek")?.addEventListener("click", () => showScreen("home"));
@@ -90,6 +95,7 @@ const baseMeals = [
 ];
 
 let meals = [...baseMeals];
+
 const weekDays = [
   "Segunda-feira",
   "Terça-feira",
@@ -110,6 +116,12 @@ const buttons = document.getElementById("buttons");
 const clearSelectionsBtn = document.getElementById("clearSelectionsBtn");
 const resetWeekBtn = document.getElementById("resetWeekBtn");
 
+// ------------------- SINCRONIZAR DIA -------------------
+async function syncCurrentDayFromDB() {
+  const snapshot = await getDocs(collection(db, "week"));
+  currentDay = snapshot.size;
+}
+
 // ------------------- UI -------------------
 function highlightDay() {
   for (let i = 0; i < 7; i++) {
@@ -126,11 +138,7 @@ async function getConsolidatedDays() {
 async function updateDay() {
   if (!mealName || !currentDayDisplay || !buttons) return;
 
-  const consolidated = await getConsolidatedDays();
-
-  while (currentDay < 7 && consolidated.some(c => c.day === weekDays[currentDay])) {
-    currentDay++;
-  }
+  await syncCurrentDayFromDB();
 
   if (currentDay >= 7) {
     mealName.textContent = "Semana concluída 👌";
@@ -139,7 +147,9 @@ async function updateDay() {
     return;
   }
 
+  const consolidated = await getConsolidatedDays();
   const usedMeals = consolidated.map(c => c.meal);
+
   meals = baseMeals.filter(meal => !usedMeals.includes(meal));
   currentIndex = 0;
 
@@ -190,6 +200,7 @@ async function checkConsensus(day) {
 // ------------------- ESCOLHA -------------------
 async function chooseMeal(isLike) {
   if (currentDay >= 7) return;
+
   const selectedMeal = meals[currentIndex];
 
   if (isLike) {
@@ -203,15 +214,9 @@ async function chooseMeal(isLike) {
     );
 
     const consensusMeal = await checkConsensus(weekDays[currentDay]);
-    if (consensusMeal) {
-      mealName.textContent = consensusMeal + " ✅";
-      buttons.style.display = "none";
 
-      currentDay++;
-      const consolidated = await getConsolidatedDays();
-      const usedMeals = consolidated.map(c => c.meal);
-      meals = baseMeals.filter(meal => !usedMeals.includes(meal));
-      currentIndex = 0;
+    if (consensusMeal) {
+      await updateDay(); // ← CORREÇÃO CRÍTICA
       return;
     }
 
@@ -229,17 +234,15 @@ clearSelectionsBtn?.addEventListener("click", async () => {
   if (currentDay >= 7) return;
 
   const snapshot = await getDocs(
-    query(collection(db, "preferences"), where("day", "==", weekDays[currentDay]), where("user", "==", currentUser))
+    query(collection(db, "preferences"),
+      where("day", "==", weekDays[currentDay]),
+      where("user", "==", currentUser))
   );
 
   for (const docSnap of snapshot.docs) {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
-  const consolidated = await getConsolidatedDays();
-  const usedMeals = consolidated.map(c => c.meal);
-  meals = baseMeals.filter(meal => !usedMeals.includes(meal));
-  currentIndex = 0;
   await updateDay();
 });
 
@@ -260,6 +263,7 @@ resetWeekBtn?.addEventListener("click", async () => {
   currentDay = 0;
   meals = [...baseMeals];
   currentIndex = 0;
+
   await updateDay();
   loadWeek();
 });
@@ -281,7 +285,7 @@ async function loadWeek() {
   });
 }
 
-// ------------------- BOTÕES DO MENU DE ESCOLHA -------------------
+// ------------------- BOTÕES -------------------
 function setupSwipeButtons() {
   const yesBtn = document.getElementById("yesBtn");
   const noBtn = document.getElementById("noBtn");
@@ -290,3 +294,7 @@ function setupSwipeButtons() {
 
   yesBtn.onclick = async () => await chooseMeal(true);
   noBtn.onclick = async () => await chooseMeal(false);
+}
+
+// ------------------- INIT -------------------
+initUser();
