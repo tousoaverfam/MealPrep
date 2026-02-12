@@ -225,24 +225,29 @@ clearSelectionsBtn?.addEventListener("click", async () => {
   await updateDay();
 });
 
-// ------------------- RESET SEMANA -------------------
+// ------------------- RESET SEMANA (CORRIGIDO) -------------------
 resetWeekBtn?.addEventListener("click", async () => {
   if (!confirm("Reset de toda a semana?")) return;
 
+  // Apagar todos os dias consolidados
   const snapshot = await getDocs(collection(db, "week"));
   for (const docSnap of snapshot.docs) {
     await deleteDoc(doc(db, "week", docSnap.id));
   }
 
+  // Apagar todas as preferências
   const prefsSnapshot = await getDocs(collection(db, "preferences"));
   for (const docSnap of prefsSnapshot.docs) {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
-  currentDay = 0;
+  // Reset em memória
+  currentDay = 0;       // ← garantir que começa na segunda-feira
   currentIndex = 0;
-  await updateDay();
-  loadWeek();
+  meals = [...baseMeals];
+
+  await updateDay();    // atualiza a UI para segunda-feira
+  loadWeek();           // atualiza a lista da semana
 });
 
 // ------------------- SEMANA -------------------
