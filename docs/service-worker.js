@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meal-prep-cache-v1';
+const CACHE_NAME = 'meal-prep-cache-v2'; // versão atualizada
 const urlsToCache = [
   '/',
   '/index.html',
