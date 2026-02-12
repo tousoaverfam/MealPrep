@@ -1,81 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meal Prep</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <!-- USER SELECT -->
   <section id="user-select" class="screen">
-    <h1>Quem está a usar?</h1>
-    <div class="user-buttons">
-      <button id="selectHugo">Hugo</button>
-      <button id="selectLucia">Lúcia</button>
-    </div>
+    <h1>Selecionar utilizador</h1>
+    <button id="selectHugo">Hugo</button>
+    <button id="selectLucia">Lúcia</button>
   </section>
 
   <!-- HOME -->
   <section id="home" class="screen">
-    <header>
-      <h1>Meal Prep</h1>
-      <span id="user-indicator"></span>
-    </header>
+    <h1>Meal Prep</h1>
+    <p>Utilizador: <span id="user-indicator"></span></p>
 
-    <div class="home-buttons">
-      <button id="btnEscolher">Escolher Refeição</button>
-      <button id="btnSemana">Ver Semana</button>
-      <button id="btnHistorico">Histórico</button>
-    </div>
+    <button id="btnEscolher">Escolher refeição</button>
+    <button id="btnSemana">Ver semana</button>
+    <button id="btnHistorico">Histórico</button>
   </section>
 
   <!-- SWIPE -->
   <section id="swipe" class="screen">
-    <button id="backFromSwipe" class="back">← Voltar</button>
+    <button id="backFromSwipe">Voltar</button>
 
     <h2 id="currentDayDisplay"></h2>
+    <h3 id="mealName"></h3>
 
-    <div class="card">
-      <h3 id="mealName"></h3>
+    <div id="buttons">
+      <button id="yesBtn">Sim</button>
+      <button id="noBtn">Não</button>
     </div>
 
-    <div id="buttons" class="action-buttons">
-      <button id="noBtn" class="no">Não</button>
-      <button id="yesBtn" class="yes">Sim</button>
-    </div>
-
-    <button id="clearSelectionsBtn" class="secondary">
-      Limpar escolhas do dia
-    </button>
+    <button id="clearSelectionsBtn">Limpar escolhas do dia</button>
   </section>
 
   <!-- WEEK -->
   <section id="week" class="screen">
-    <button id="backFromWeek" class="back">← Voltar</button>
+    <button id="backFromWeek">Voltar</button>
     <h2>Plano da Semana</h2>
 
-    <div class="week-list">
-      <div id="day-row-0" class="day-row">Segunda: <span id="day-0">—</span></div>
-      <div id="day-row-1" class="day-row">Terça: <span id="day-1">—</span></div>
-      <div id="day-row-2" class="day-row">Quarta: <span id="day-2">—</span></div>
-      <div id="day-row-3" class="day-row">Quinta: <span id="day-3">—</span></div>
-      <div id="day-row-4" class="day-row">Sexta: <span id="day-4">—</span></div>
-      <div id="day-row-5" class="day-row">Sábado: <span id="day-5">—</span></div>
-      <div id="day-row-6" class="day-row">Domingo: <span id="day-6">—</span></div>
-    </div>
+    <div id="day-row-0">Segunda: <span id="day-0">—</span></div>
+    <div id="day-row-1">Terça: <span id="day-1">—</span></div>
+    <div id="day-row-2">Quarta: <span id="day-2">—</span></div>
+    <div id="day-row-3">Quinta: <span id="day-3">—</span></div>
+    <div id="day-row-4">Sexta: <span id="day-4">—</span></div>
+    <div id="day-row-5">Sábado: <span id="day-5">—</span></div>
+    <div id="day-row-6">Domingo: <span id="day-6">—</span></div>
 
-    <button id="resetWeekBtn" class="danger">
-      Limpar Semana
-    </button>
+    <button id="resetWeekBtn">Reset Semana</button>
   </section>
 
   <!-- HISTORY -->
   <section id="history" class="screen">
-    <button id="backFromHistory" class="back">← Voltar</button>
+    <button id="backFromHistory">Voltar</button>
     <h2>Histórico</h2>
-    <p>(Em construção)</p>
+    <p>Em construção</p>
   </section>
 
   <script type="module" src="app.js"></script>
