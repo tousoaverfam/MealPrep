@@ -115,9 +115,17 @@ function highlightDay() {
   }
 }
 
+// ------------------- CONSOLIDATED DAYS -------------------
 async function getConsolidatedDays() {
   const snapshot = await getDocs(collection(db, "week"));
   return snapshot.docs.map(docSnap => docSnap.id);
+}
+
+// ------------------- AVAILABLE MEALS -------------------
+async function getAvailableMealsForDay(day) {
+  const weekSnapshot = await getDocs(collection(db, "week"));
+  const usedMeals = weekSnapshot.docs.map(docSnap => docSnap.data().meal);
+  return baseMeals.filter(meal => !usedMeals.includes(meal));
 }
 
 // ------------------- UPDATE DAY -------------------
@@ -133,6 +141,15 @@ async function updateDay() {
   if (currentDay >= 7) {
     mealName.textContent = "Semana concluída 👌";
     currentDayDisplay.textContent = "";
+    buttons.style.display = "none";
+    return;
+  }
+
+  meals = await getAvailableMealsForDay(weekDays[currentDay]);
+
+  if (meals.length === 0) {
+    mealName.textContent = "Nenhuma refeição disponível neste dia!";
+    currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
     buttons.style.display = "none";
     return;
   }
@@ -178,7 +195,7 @@ async function checkConsensus(day) {
 
 // ------------------- ESCOLHA -------------------
 async function chooseMeal(isLike) {
-  if (currentDay >= 7) return;
+  if (currentDay >= 7 || meals.length === 0) return;
 
   const selectedMeal = meals[currentIndex];
 
@@ -225,7 +242,7 @@ clearSelectionsBtn?.addEventListener("click", async () => {
   await updateDay();
 });
 
-// ------------------- RESET SEMANA (CORRIGIDO) -------------------
+// ------------------- RESET SEMANA -------------------
 resetWeekBtn?.addEventListener("click", async () => {
   if (!confirm("Reset de toda a semana?")) return;
 
@@ -242,12 +259,12 @@ resetWeekBtn?.addEventListener("click", async () => {
   }
 
   // Reset em memória
-  currentDay = 0;       // ← garantir que começa na segunda-feira
+  currentDay = 0;
   currentIndex = 0;
   meals = [...baseMeals];
 
-  await updateDay();    // atualiza a UI para segunda-feira
-  loadWeek();           // atualiza a lista da semana
+  await updateDay();
+  loadWeek();
 });
 
 // ------------------- SEMANA -------------------
