@@ -68,7 +68,7 @@ document.getElementById("selectLucia")?.addEventListener("click", () => setUser(
 // ------------------- NAVIGATION -------------------
 document.getElementById("btnEscolher")?.addEventListener("click", async () => {
   showScreen("swipe");
-  setupSwipeButtons(); // garante que os listeners estão ativos
+  setupSwipeButtons();
   await updateDay();
 });
 
@@ -128,6 +128,7 @@ async function updateDay() {
 
   const consolidated = await getConsolidatedDays();
 
+  // Avança para o próximo dia sem consenso
   while (currentDay < 7 && consolidated.some(c => c.day === weekDays[currentDay])) {
     currentDay++;
   }
@@ -139,6 +140,7 @@ async function updateDay() {
     return;
   }
 
+  // Remove refeições já escolhidas na semana
   const usedMeals = consolidated.map(c => c.meal);
   meals = baseMeals.filter(meal => !usedMeals.includes(meal));
   currentIndex = 0;
@@ -181,10 +183,10 @@ async function checkConsensus(day) {
       await deleteDoc(doc(db, "preferences", docSnap.id));
     }
 
-    return true;
+    return chosen; // Retorna a refeição escolhida para atualizar UI
   }
 
-  return false;
+  return null;
 }
 
 // ------------------- ESCOLHA -------------------
@@ -202,10 +204,13 @@ async function chooseMeal(isLike) {
       }
     );
 
-    const consensus = await checkConsensus(weekDays[currentDay]);
-    if (consensus) {
+    const consensusMeal = await checkConsensus(weekDays[currentDay]);
+    if (consensusMeal) {
+      // Atualiza imediatamente a UI com o consenso
+      mealName.textContent = consensusMeal + " ✅";
+      buttons.style.display = "none";
       currentDay++;
-      await updateDay();
+      meals = baseMeals.filter(meal => !await getConsolidatedDays().then(c => c.map(x => x.meal)));
       return;
     }
 
@@ -214,8 +219,8 @@ async function chooseMeal(isLike) {
     meals.push(meals.splice(currentIndex, 1)[0]);
   }
 
-  currentIndex = 0; // garante sempre que a UI pega o primeiro da lista
-  await updateDay(); // atualiza a interface imediatamente
+  currentIndex = 0;
+  await updateDay();
 }
 
 // ------------------- LIMPAR ESCOLHAS DO DIA -------------------
@@ -282,13 +287,8 @@ function setupSwipeButtons() {
 
   if (!yesBtn || !noBtn) return;
 
-  yesBtn.onclick = async () => {
-    await chooseMeal(true);
-  };
-
-  noBtn.onclick = async () => {
-    await chooseMeal(false);
-  };
+  yesBtn.onclick = async () => await chooseMeal(true);
+  noBtn.onclick = async () => await chooseMeal(false);
 }
 
 // ------------------- INIT -------------------
