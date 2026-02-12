@@ -4,98 +4,80 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meal Prep</title>
-
-  <link rel="stylesheet" href="./style.css" />
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#000000" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <div id="app">
 
-    <!-- USER SELECT -->
-    <section id="user-select" class="screen">
-      <div class="centered">
-        <h1>Quem está a usar?</h1>
-        <button class="main-btn" id="selectHugo">Hugo</button>
-        <button class="main-btn ghost" id="selectLucia">Lúcia</button>
-      </div>
-    </section>
+  <!-- USER SELECT -->
+  <section id="user-select" class="screen">
+    <h1>Quem está a usar?</h1>
+    <div class="user-buttons">
+      <button id="selectHugo">Hugo</button>
+      <button id="selectLucia">Lúcia</button>
+    </div>
+  </section>
 
-    <!-- HOME -->
-    <section id="home" class="screen">
-      <div class="centered">
-        <h1>Meal Prep</h1>
-        <button class="main-btn" id="btnEscolher">Escolher refeições</button>
-        <button class="main-btn ghost" id="btnSemana">Semana atual</button>
-        <button class="main-btn ghost" id="btnHistorico">Histórico</button>
-      </div>
-    </section>
+  <!-- HOME -->
+  <section id="home" class="screen">
+    <header>
+      <h1>Meal Prep</h1>
+      <span id="user-indicator"></span>
+    </header>
 
-    <!-- ESCOLHA -->
-    <section id="swipe" class="screen">
-      <header class="top-bar">
-        <button class="back-btn" id="backFromSwipe">←</button>
-        <h2>Escolher refeição</h2>
-      </header>
+    <div class="home-buttons">
+      <button id="btnEscolher">Escolher Refeição</button>
+      <button id="btnSemana">Ver Semana</button>
+      <button id="btnHistorico">Histórico</button>
+    </div>
+  </section>
 
-      <div class="card">
-        <div id="mealImagePlaceholder">🍽️</div>
-        <h3 id="mealName"></h3>
-        <p id="currentDayDisplay"></p>
-      </div>
+  <!-- SWIPE -->
+  <section id="swipe" class="screen">
+    <button id="backFromSwipe" class="back">← Voltar</button>
 
-      <div class="action-buttons" id="buttons">
-        <button class="yes-btn" id="yesBtn">Sim</button>
-        <button class="no-btn" id="noBtn">Não</button>
-      </div>
+    <h2 id="currentDayDisplay"></h2>
 
-      <!-- LIMPAR ESCOLHAS DO DIA -->
-      <button id="clearSelectionsBtn" class="clear-btn">
-        Limpar escolhas do dia
-      </button>
-    </section>
+    <div class="card">
+      <h3 id="mealName"></h3>
+    </div>
 
-    <!-- SEMANA -->
-    <section id="week" class="screen">
-      <header class="top-bar">
-        <button class="back-btn" id="backFromWeek">←</button>
-        <h2>Semana</h2>
-      </header>
+    <div id="buttons" class="action-buttons">
+      <button id="noBtn" class="no">Não</button>
+      <button id="yesBtn" class="yes">Sim</button>
+    </div>
 
-      <ul class="week-list">
-        <li id="day-row-0"><span>Segunda</span><strong id="day-0">—</strong></li>
-        <li id="day-row-1"><span>Terça</span><strong id="day-1">—</strong></li>
-        <li id="day-row-2"><span>Quarta</span><strong id="day-2">—</strong></li>
-        <li id="day-row-3"><span>Quinta</span><strong id="day-3">—</strong></li>
-        <li id="day-row-4"><span>Sexta</span><strong id="day-4">—</strong></li>
-        <li id="day-row-5"><span>Sábado</span><strong id="day-5">—</strong></li>
-        <li id="day-row-6"><span>Domingo</span><strong id="day-6">—</strong></li>
-      </ul>
+    <button id="clearSelectionsBtn" class="secondary">
+      Limpar escolhas do dia
+    </button>
+  </section>
 
-      <!-- RESET SEMANA -->
-      <button id="resetWeekBtn" class="danger-btn">
-        Reset semana
-      </button>
-    </section>
+  <!-- WEEK -->
+  <section id="week" class="screen">
+    <button id="backFromWeek" class="back">← Voltar</button>
+    <h2>Plano da Semana</h2>
 
-    <!-- HISTÓRICO -->
-    <section id="history" class="screen">
-      <header class="top-bar">
-        <button class="back-btn" id="backFromHistory">←</button>
-        <h2>Histórico</h2>
-      </header>
+    <div class="week-list">
+      <div id="day-row-0" class="day-row">Segunda: <span id="day-0">—</span></div>
+      <div id="day-row-1" class="day-row">Terça: <span id="day-1">—</span></div>
+      <div id="day-row-2" class="day-row">Quarta: <span id="day-2">—</span></div>
+      <div id="day-row-3" class="day-row">Quinta: <span id="day-3">—</span></div>
+      <div id="day-row-4" class="day-row">Sexta: <span id="day-4">—</span></div>
+      <div id="day-row-5" class="day-row">Sábado: <span id="day-5">—</span></div>
+      <div id="day-row-6" class="day-row">Domingo: <span id="day-6">—</span></div>
+    </div>
 
-      <p class="placeholder-text">
-        Em desenvolvimento.
-      </p>
-    </section>
+    <button id="resetWeekBtn" class="danger">
+      Limpar Semana
+    </button>
+  </section>
 
-  </div>
+  <!-- HISTORY -->
+  <section id="history" class="screen">
+    <button id="backFromHistory" class="back">← Voltar</button>
+    <h2>Histórico</h2>
+    <p>(Em construção)</p>
+  </section>
 
-  <!-- USER INDICATOR -->
-  <div id="user-indicator"></div>
-
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
