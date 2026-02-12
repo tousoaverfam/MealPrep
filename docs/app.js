@@ -125,9 +125,9 @@ async function getConsolidatedDays() {
 async function updateDay() {
   if (!mealName || !currentDayDisplay || !buttons) return;
 
-  const consolidated = await getConsolidatedDays();
+  const snapshot = await getDocs(collection(db, "week"));
+  const consolidated = snapshot.docs.map(docSnap => docSnap.id);
 
-  // Avança para o próximo dia sem consenso
   while (currentDay < 7 && consolidated.includes(weekDays[currentDay])) {
     currentDay++;
   }
@@ -139,18 +139,12 @@ async function updateDay() {
     return;
   }
 
-  if (meals.length === 0) {
-    mealName.textContent = "Já não há mais refeições chefe!";
-    currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
-    buttons.style.display = "none";
-    return;
-  }
-
   buttons.style.display = "flex";
   mealName.textContent = meals[currentIndex];
   currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
   highlightDay();
 }
+
 
 // ------------------- CONSENSO -------------------
 async function checkConsensus(day) {
@@ -186,9 +180,11 @@ async function checkConsensus(day) {
 // ------------------- ESCOLHA -------------------
 async function chooseMeal(isLike) {
   if (currentDay >= 7) return;
+
   const selectedMeal = meals[currentIndex];
 
   if (isLike) {
+    // Apenas gravar a preferência do user no dia
     await setDoc(
       doc(db, "preferences", `${currentUser}_${currentDay}_${selectedMeal}`),
       {
@@ -197,24 +193,22 @@ async function chooseMeal(isLike) {
         meal: selectedMeal
       }
     );
-
-    const consensus = await checkConsensus(weekDays[currentDay]);
-    if (consensus) {
-      currentDay++;
-      meals = [...baseMeals];
-      currentIndex = 0;
-      await updateDay();
-      return;
-    }
-
-    meals.splice(currentIndex, 1);
-  } else {
-    meals.push(meals.splice(currentIndex, 1)[0]);
   }
 
-  if (currentIndex >= meals.length) currentIndex = 0;
+  // Verificar consenso
+  const consensus = await checkConsensus(weekDays[currentDay]);
+  if (consensus) {
+    currentDay++;
+    currentIndex = 0;
+    await updateDay(); // avança para o próximo dia
+    return;
+  }
+
+  // Apenas passar para a próxima refeição, sem remover da pool global
+  currentIndex = (currentIndex + 1) % meals.length;
   await updateDay();
 }
+
 
 // ------------------- LIMPAR ESCOLHAS DO DIA -------------------
 clearSelectionsBtn?.addEventListener("click", async () => {
