@@ -1,118 +1,192 @@
+:root {
+  --black: #000;
+  --white: #fff;
+  --gray-light: #f2f2f2;
+  --gray-soft: #e8e8e8;
+}
+
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
 }
 
 body {
-  background: #f4f6f9;
-  color: #333;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+  margin: 0;
+  background: var(--white);
+  color: var(--black);
+}
+
+#app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 24px;
 }
 
 .screen {
   display: none;
-  width: 100%;
-  max-width: 420px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .screen.active {
   display: block;
+  opacity: 1;
 }
 
-h1, h2 {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-header {
+.centered {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  flex-direction: column;
+  justify-content: center;
+  height: 90vh;
 }
 
-#user-indicator {
-  font-weight: bold;
-  color: #007bff;
+h1 {
+  font-size: 34px;
+  margin-bottom: 40px;
 }
 
-button {
-  padding: 12px;
-  margin: 8px 0;
+.main-btn {
+  padding: 16px;
+  border-radius: 14px;
   border: none;
-  border-radius: 8px;
   font-size: 16px;
+  margin-bottom: 16px;
+  background: var(--black);
+  color: var(--white);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.main-btn:hover {
+  transform: scale(1.03);
+  opacity: 0.9;
+}
+
+.main-btn.ghost {
+  background: var(--gray-light);
+  color: var(--black);
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  border: none;
+  background: none;
+  font-size: 20px;
   cursor: pointer;
-  width: 100%;
-}
-
-.home-buttons button {
-  background: #007bff;
-  color: white;
-}
-
-.user-buttons button {
-  background: #28a745;
-  color: white;
-}
-
-.back {
-  background: #ddd;
-  margin-bottom: 20px;
 }
 
 .card {
-  background: white;
-  padding: 40px 20px;
-  border-radius: 12px;
+  background: var(--white);
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
   text-align: center;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  margin-bottom: 24px;
+}
+
+#mealImagePlaceholder {
+  height: 180px;
+  background: var(--gray-light);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.yes {
-  background: #28a745;
-  color: white;
+.action-buttons button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-size: 16px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.no {
-  background: #dc3545;
-  color: white;
+.action-buttons button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
 }
 
-.secondary {
-  background: #6c757d;
-  color: white;
+.yes-btn {
+  background: var(--black);
+  color: var(--white);
 }
 
-.danger {
-  background: #dc3545;
-  color: white;
-  margin-top: 20px;
+.no-btn {
+  background: var(--gray-light);
+}
+
+.reset-day-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid red;
+  background: transparent;
+  color: red;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.reset-day-btn:hover {
+  background: rgba(255,0,0,0.05);
 }
 
 .week-list {
-  margin-top: 20px;
+  list-style: none;
+  padding: 0;
 }
 
-.day-row {
-  background: white;
-  padding: 12px;
-  margin-bottom: 8px;
-  border-radius: 8px;
+.week-list li {
   display: flex;
   justify-content: space-between;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 6px;
+  background: var(--gray-light);
 }
 
-.day-row.active {
-  border: 2px solid #007bff;
+.placeholder-text {
+  text-align: center;
+  margin-top: 40px;
+  color: #777;
+}
+
+#user-indicator {
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  font-size: 12px;
+  color: #555;
+  opacity: 0.7;
+}
+
+.clear-btn {
+  margin-top: 16px;
+  padding: 12px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #000;
+  background: transparent;
+  color: #d11;
+  font-size: 14px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.clear-btn:hover {
+  opacity: 0.8;
+  transform: scale(1.02);
 }
