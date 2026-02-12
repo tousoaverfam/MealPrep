@@ -68,7 +68,7 @@ document.getElementById("selectLucia")?.addEventListener("click", () => setUser(
 // ------------------- NAVIGATION -------------------
 document.getElementById("btnEscolher")?.addEventListener("click", async () => {
   showScreen("swipe");
-  setupSwipeButtons(); // Garantir que os listeners estão ativos
+  setupSwipeButtons(); // garante que os listeners estão ativos
   await updateDay();
 });
 
@@ -90,7 +90,6 @@ const baseMeals = [
 ];
 
 let meals = [...baseMeals];
-
 const weekDays = [
   "Segunda-feira",
   "Terça-feira",
@@ -215,8 +214,8 @@ async function chooseMeal(isLike) {
     meals.push(meals.splice(currentIndex, 1)[0]);
   }
 
-  if (currentIndex >= meals.length) currentIndex = 0;
-  await updateDay();
+  currentIndex = 0; // garante sempre que a UI pega o primeiro da lista
+  await updateDay(); // atualiza a interface imediatamente
 }
 
 // ------------------- LIMPAR ESCOLHAS DO DIA -------------------
@@ -277,7 +276,7 @@ async function loadWeek() {
 }
 
 // ------------------- BOTÕES DO MENU DE ESCOLHA -------------------
-async function setupSwipeButtons() {
+function setupSwipeButtons() {
   const yesBtn = document.getElementById("yesBtn");
   const noBtn = document.getElementById("noBtn");
 
