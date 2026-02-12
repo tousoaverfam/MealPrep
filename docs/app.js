@@ -66,7 +66,12 @@ document.getElementById("selectHugo")?.addEventListener("click", () => setUser("
 document.getElementById("selectLucia")?.addEventListener("click", () => setUser("lucia"));
 
 // ------------------- NAVIGATION -------------------
-document.getElementById("btnEscolher")?.addEventListener("click", () => { showScreen("swipe"); updateDay(); });
+document.getElementById("btnEscolher")?.addEventListener("click", async () => {
+  showScreen("swipe");
+  await setupSwipeButtons(); // garante que os listeners dos botões estão ativos
+  await updateDay();
+});
+
 document.getElementById("btnSemana")?.addEventListener("click", () => { showScreen("week"); loadWeek(); });
 document.getElementById("btnHistorico")?.addEventListener("click", () => showScreen("history"));
 document.getElementById("backFromSwipe")?.addEventListener("click", () => showScreen("home"));
@@ -103,8 +108,6 @@ let currentIndex = 0;
 const mealName = document.getElementById("mealName");
 const currentDayDisplay = document.getElementById("currentDayDisplay");
 const buttons = document.getElementById("buttons");
-const yesBtn = document.getElementById("yesBtn");
-const noBtn = document.getElementById("noBtn");
 const clearSelectionsBtn = document.getElementById("clearSelectionsBtn");
 const resetWeekBtn = document.getElementById("resetWeekBtn");
 
@@ -116,13 +119,11 @@ function highlightDay() {
   }
 }
 
-// Pega todas as refeições já definidas na semana
 async function getConsolidatedDays() {
   const snapshot = await getDocs(collection(db, "week"));
   return snapshot.docs.map(docSnap => ({ day: docSnap.id, meal: docSnap.data().meal }));
 }
 
-// Atualiza o card do dia e filtra refeições já escolhidas
 async function updateDay() {
   if (!mealName || !currentDayDisplay || !buttons) return;
 
@@ -140,7 +141,7 @@ async function updateDay() {
     return;
   }
 
-  // Filtra refeições já definidas para a semana
+  // Filtra refeições já escolhidas na semana
   const usedMeals = consolidated.map(c => c.meal);
   meals = baseMeals.filter(meal => !usedMeals.includes(meal));
   currentIndex = 0;
@@ -232,7 +233,6 @@ clearSelectionsBtn?.addEventListener("click", async () => {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
-  // Reset lista de refeições do dia removendo já escolhidas da semana
   const consolidated = await getConsolidatedDays();
   const usedMeals = consolidated.map(c => c.meal);
   meals = baseMeals.filter(meal => !usedMeals.includes(meal));
@@ -278,23 +278,21 @@ async function loadWeek() {
   });
 }
 
-// ------------------- EVENTOS -------------------
-function setupButtons() {
+// ------------------- BOTÕES DO MENU DE ESCOLHA -------------------
+async function setupSwipeButtons() {
   const yesBtn = document.getElementById("yesBtn");
   const noBtn = document.getElementById("noBtn");
 
   if (!yesBtn || !noBtn) return;
 
-  yesBtn.addEventListener("click", async () => {
+  yesBtn.onclick = async () => {
     await chooseMeal(true);
-  });
+  };
 
-  noBtn.addEventListener("click", async () => {
+  noBtn.onclick = async () => {
     await chooseMeal(false);
-  });
+  };
 }
-
-setupButtons();
 
 // ------------------- INIT -------------------
 initUser();
