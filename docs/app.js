@@ -85,7 +85,6 @@ const baseMeals = [
 ];
 
 let meals = [...baseMeals];
-
 const weekDays = [
   "Segunda-feira",
   "Terça-feira",
@@ -118,15 +117,14 @@ function highlightDay() {
 
 async function getConsolidatedDays() {
   const snapshot = await getDocs(collection(db, "week"));
-  const consolidated = snapshot.docs.map(docSnap => docSnap.id);
-  return consolidated;
+  return snapshot.docs.map(docSnap => docSnap.id);
 }
 
+// ------------------- UPDATE DAY -------------------
 async function updateDay() {
   if (!mealName || !currentDayDisplay || !buttons) return;
 
-  const snapshot = await getDocs(collection(db, "week"));
-  const consolidated = snapshot.docs.map(docSnap => docSnap.id);
+  const consolidated = await getConsolidatedDays();
 
   while (currentDay < 7 && consolidated.includes(weekDays[currentDay])) {
     currentDay++;
@@ -139,12 +137,13 @@ async function updateDay() {
     return;
   }
 
-  buttons.style.display = "flex";
+  currentIndex = currentIndex % meals.length;
   mealName.textContent = meals[currentIndex];
   currentDayDisplay.textContent = "Dia: " + weekDays[currentDay];
+  buttons.style.display = "flex";
+
   highlightDay();
 }
-
 
 // ------------------- CONSENSO -------------------
 async function checkConsensus(day) {
@@ -184,7 +183,6 @@ async function chooseMeal(isLike) {
   const selectedMeal = meals[currentIndex];
 
   if (isLike) {
-    // Apenas gravar a preferência do user no dia
     await setDoc(
       doc(db, "preferences", `${currentUser}_${currentDay}_${selectedMeal}`),
       {
@@ -195,33 +193,34 @@ async function chooseMeal(isLike) {
     );
   }
 
-  // Verificar consenso
   const consensus = await checkConsensus(weekDays[currentDay]);
   if (consensus) {
     currentDay++;
     currentIndex = 0;
-    await updateDay(); // avança para o próximo dia
+    await updateDay();
     return;
   }
 
-  // Apenas passar para a próxima refeição, sem remover da pool global
   currentIndex = (currentIndex + 1) % meals.length;
   await updateDay();
 }
 
-
 // ------------------- LIMPAR ESCOLHAS DO DIA -------------------
 clearSelectionsBtn?.addEventListener("click", async () => {
   if (currentDay >= 7) return;
+
   const snapshot = await getDocs(
-    query(collection(db, "preferences"), where("day", "==", weekDays[currentDay]), where("user", "==", currentUser))
+    query(
+      collection(db, "preferences"),
+      where("day", "==", weekDays[currentDay]),
+      where("user", "==", currentUser)
+    )
   );
 
   for (const docSnap of snapshot.docs) {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
-  meals = [...baseMeals];
   currentIndex = 0;
   await updateDay();
 });
@@ -241,7 +240,6 @@ resetWeekBtn?.addEventListener("click", async () => {
   }
 
   currentDay = 0;
-  meals = [...baseMeals];
   currentIndex = 0;
   await updateDay();
   loadWeek();
