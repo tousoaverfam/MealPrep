@@ -1,5 +1,6 @@
-const CACHE_NAME = 'meal-prep-cache-v2';
-const urlsToCache = [
+const CACHE_NAME = 'meal-prep-cache-v3';
+
+const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
@@ -9,30 +10,57 @@ const urlsToCache = [
   '/icons/512x512.png'
 ];
 
-// Instala o service worker e faz cache dos arquivos
+// INSTALL
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Ativa o service worker e limpa caches antigos
+// ACTIVATE
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-    ))
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Intercepta requests e serve do cache quando offline
+// FETCH
 self.addEventListener('fetch', event => {
+  const request = event.request;
+
+  // Não interceptar chamadas ao Firebase
+  if (request.url.includes('firestore.googleapis.com') ||
+      request.url.includes('firebase')) {
+    return;
+  }
+
+  // Estratégia: Network First para HTML, CSS e JS
+  if (
+    request.destination === 'document' ||
+    request.destination === 'script' ||
+    request.destination === 'style'
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Cache First para imagens
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-      .catch(() => caches.match('/index.html'))
+    caches.match(request).then(response => response || fetch(request))
   );
 });
