@@ -116,19 +116,21 @@ function highlightDay() {
   }
 }
 
+// Pega todas as refeições já definidas na semana
 async function getConsolidatedDays() {
   const snapshot = await getDocs(collection(db, "week"));
-  const consolidated = snapshot.docs.map(docSnap => docSnap.id);
+  const consolidated = snapshot.docs.map(docSnap => ({ day: docSnap.id, meal: docSnap.data().meal }));
   return consolidated;
 }
 
+// Atualiza o card do dia e filtra refeições já escolhidas
 async function updateDay() {
   if (!mealName || !currentDayDisplay || !buttons) return;
 
   const consolidated = await getConsolidatedDays();
 
   // Avança para o próximo dia sem consenso
-  while (currentDay < 7 && consolidated.includes(weekDays[currentDay])) {
+  while (currentDay < 7 && consolidated.some(c => c.day === weekDays[currentDay])) {
     currentDay++;
   }
 
@@ -138,6 +140,11 @@ async function updateDay() {
     buttons.style.display = "none";
     return;
   }
+
+  // Filtra refeições já definidas para a semana
+  const usedMeals = consolidated.map(c => c.meal);
+  meals = baseMeals.filter(meal => !usedMeals.includes(meal));
+  currentIndex = 0;
 
   if (meals.length === 0) {
     mealName.textContent = "Já não há mais refeições chefe!";
@@ -201,8 +208,6 @@ async function chooseMeal(isLike) {
     const consensus = await checkConsensus(weekDays[currentDay]);
     if (consensus) {
       currentDay++;
-      meals = [...baseMeals];
-      currentIndex = 0;
       await updateDay();
       return;
     }
@@ -227,7 +232,10 @@ clearSelectionsBtn?.addEventListener("click", async () => {
     await deleteDoc(doc(db, "preferences", docSnap.id));
   }
 
-  meals = [...baseMeals];
+  // Reset lista de refeições do dia removendo já escolhidas da semana
+  const consolidated = await getConsolidatedDays();
+  const usedMeals = consolidated.map(c => c.meal);
+  meals = baseMeals.filter(meal => !usedMeals.includes(meal));
   currentIndex = 0;
   await updateDay();
 });
