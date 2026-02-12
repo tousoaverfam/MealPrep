@@ -119,8 +119,7 @@ function highlightDay() {
 // Pega todas as refeições já definidas na semana
 async function getConsolidatedDays() {
   const snapshot = await getDocs(collection(db, "week"));
-  const consolidated = snapshot.docs.map(docSnap => ({ day: docSnap.id, meal: docSnap.data().meal }));
-  return consolidated;
+  return snapshot.docs.map(docSnap => ({ day: docSnap.id, meal: docSnap.data().meal }));
 }
 
 // Atualiza o card do dia e filtra refeições já escolhidas
@@ -224,6 +223,7 @@ async function chooseMeal(isLike) {
 // ------------------- LIMPAR ESCOLHAS DO DIA -------------------
 clearSelectionsBtn?.addEventListener("click", async () => {
   if (currentDay >= 7) return;
+
   const snapshot = await getDocs(
     query(collection(db, "preferences"), where("day", "==", weekDays[currentDay]), where("user", "==", currentUser))
   );
@@ -279,8 +279,22 @@ async function loadWeek() {
 }
 
 // ------------------- EVENTOS -------------------
-yesBtn?.addEventListener("click", () => chooseMeal(true));
-noBtn?.addEventListener("click", () => chooseMeal(false));
+function setupButtons() {
+  const yesBtn = document.getElementById("yesBtn");
+  const noBtn = document.getElementById("noBtn");
+
+  if (!yesBtn || !noBtn) return;
+
+  yesBtn.addEventListener("click", async () => {
+    await chooseMeal(true);
+  });
+
+  noBtn.addEventListener("click", async () => {
+    await chooseMeal(false);
+  });
+}
+
+setupButtons();
 
 // ------------------- INIT -------------------
 initUser();
