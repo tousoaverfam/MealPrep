@@ -12,13 +12,9 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  initApp();
-});
+document.addEventListener("DOMContentLoaded", async () => {
 
-function initApp() {
-
-  // 🔥 CONFIG FIREBASE
+  // 🔥 FIREBASE
   const firebaseConfig = {
     apiKey: "API_KEY",
     authDomain: "AUTH_DOMAIN",
@@ -31,14 +27,32 @@ function initApp() {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // 🔹 USERS
-  let currentUser = null;
+  // 🔹 ELEMENTOS
+  const userSelection = document.getElementById("userSelection");
+  const mainMenu = document.getElementById("mainMenu");
+  const mealSelection = document.getElementById("mealSelection");
 
-  // 🔹 DIAS
-  const days = ["segunda", "terca", "quarta", "quinta", "sexta"];
+  const user1Btn = document.getElementById("user1Btn");
+  const user2Btn = document.getElementById("user2Btn");
+
+  const startSelectionBtn = document.getElementById("startSelectionBtn");
+  const yesBtn = document.getElementById("yesBtn");
+  const noBtn = document.getElementById("noBtn");
+  const resetWeekBtn = document.getElementById("resetWeekBtn");
+
+  const mealName = document.getElementById("mealName");
+  const dayLabel = document.getElementById("dayLabel");
+
+  // 🔹 GARANTIR ECRÃ INICIAL VISÍVEL
+  userSelection.style.display = "block";
+  mainMenu.style.display = "none";
+  mealSelection.style.display = "none";
+
+  let currentUser = null;
   let currentDay = 0;
 
-  // 🔹 REFEIÇÕES BASE
+  const days = ["segunda", "terca", "quarta", "quinta", "sexta"];
+
   const baseMeals = [
     "Frango Grelhado",
     "Massa à Bolonhesa",
@@ -48,50 +62,27 @@ function initApp() {
     "Omelete"
   ];
 
-  // 🔹 ELEMENTOS DOM
-  const userSelection = document.getElementById("userSelection");
-  const mainMenu = document.getElementById("mainMenu");
-  const mealSelection = document.getElementById("mealSelection");
-  const mealName = document.getElementById("mealName");
-  const dayLabel = document.getElementById("dayLabel");
-
-  const user1Btn = document.getElementById("user1Btn");
-  const user2Btn = document.getElementById("user2Btn");
-  const startSelectionBtn = document.getElementById("startSelectionBtn");
-  const yesBtn = document.getElementById("yesBtn");
-  const noBtn = document.getElementById("noBtn");
-  const resetWeekBtn = document.getElementById("resetWeekBtn");
-
-  // 🔹 UTIL
   function showMainMenu() {
-    if (userSelection) userSelection.style.display = "none";
-    if (mealSelection) mealSelection.style.display = "none";
-    if (mainMenu) mainMenu.style.display = "block";
+    userSelection.style.display = "none";
+    mealSelection.style.display = "none";
+    mainMenu.style.display = "block";
   }
 
-  async function syncCurrentDayFromDB() {
-    const configRef = doc(db, "config", "weekState");
-    const configSnap = await getDoc(configRef);
-
-    if (configSnap.exists()) {
-      currentDay = configSnap.data().currentDay || 0;
-    } else {
-      currentDay = 0;
-      await setDoc(configRef, { currentDay: 0 });
-    }
+  async function saveCurrentDay() {
+    await setDoc(doc(db, "config", "weekState"), { currentDay });
   }
 
-  async function saveCurrentDayToDB() {
-    const configRef = doc(db, "config", "weekState");
-    await setDoc(configRef, { currentDay });
+  async function loadCurrentDay() {
+    const snap = await getDoc(doc(db, "config", "weekState"));
+    currentDay = snap.exists() ? snap.data().currentDay : 0;
   }
 
-  async function getAvailableMealsForDay(day) {
+  async function getAvailableMeals(day) {
 
-    const weekSnapshot = await getDocs(collection(db, "week"));
-    const usedMeals = weekSnapshot.docs.map(d => d.data().meal);
+    const weekSnap = await getDocs(collection(db, "week"));
+    const used = weekSnap.docs.map(d => d.data().meal);
 
-    const userPrefsSnapshot = await getDocs(
+    const userSnap = await getDocs(
       query(
         collection(db, "preferences"),
         where("day", "==", day),
@@ -99,12 +90,10 @@ function initApp() {
       )
     );
 
-    const likedMeals = userPrefsSnapshot.docs.map(d => d.data().meal);
+    const liked = userSnap.docs.map(d => d.data().meal);
 
     return baseMeals.filter(
-      meal =>
-        !usedMeals.includes(meal) &&
-        !likedMeals.includes(meal)
+      m => !used.includes(m) && !liked.includes(m)
     );
   }
 
@@ -116,26 +105,22 @@ function initApp() {
       return;
     }
 
-    if (!dayLabel || !mealName) return;
-
     dayLabel.textContent = days[currentDay];
 
-    const availableMeals = await getAvailableMealsForDay(days[currentDay]);
+    const meals = await getAvailableMeals(days[currentDay]);
 
-    if (availableMeals.length === 0) {
+    if (meals.length === 0) {
       mealName.textContent = "Sem refeições disponíveis";
       return;
     }
 
-    const randomMeal =
-      availableMeals[Math.floor(Math.random() * availableMeals.length)];
-
-    mealName.textContent = randomMeal;
+    mealName.textContent =
+      meals[Math.floor(Math.random() * meals.length)];
   }
 
   async function checkConsensus(meal, day) {
 
-    const snapshot = await getDocs(
+    const snap = await getDocs(
       query(
         collection(db, "preferences"),
         where("day", "==", day),
@@ -143,7 +128,7 @@ function initApp() {
       )
     );
 
-    if (snapshot.size >= 2) {
+    if (snap.size >= 2) {
 
       await addDoc(collection(db, "week"), { day, meal });
 
@@ -151,84 +136,63 @@ function initApp() {
         query(collection(db, "preferences"), where("day", "==", day))
       );
 
-      for (const docSnap of dayPrefs.docs) {
-        await deleteDoc(docSnap.ref);
+      for (const d of dayPrefs.docs) {
+        await deleteDoc(d.ref);
       }
 
       currentDay++;
-      await saveCurrentDayToDB();
+      await saveCurrentDay();
     }
   }
 
-  // 🔹 EVENT LISTENERS (SEGUROS)
+  // 🔹 EVENTOS
 
-  if (user1Btn) {
-    user1Btn.addEventListener("click", () => {
-      currentUser = "user1";
-      showMainMenu();
+  user1Btn.addEventListener("click", () => {
+    currentUser = "user1";
+    showMainMenu();
+  });
+
+  user2Btn.addEventListener("click", () => {
+    currentUser = "user2";
+    showMainMenu();
+  });
+
+  startSelectionBtn.addEventListener("click", async () => {
+    await loadCurrentDay();
+    mainMenu.style.display = "none";
+    mealSelection.style.display = "block";
+    updateDay();
+  });
+
+  yesBtn.addEventListener("click", async () => {
+    const meal = mealName.textContent;
+    const day = days[currentDay];
+
+    await addDoc(collection(db, "preferences"), {
+      user: currentUser,
+      day,
+      meal
     });
-  }
 
-  if (user2Btn) {
-    user2Btn.addEventListener("click", () => {
-      currentUser = "user2";
-      showMainMenu();
-    });
-  }
+    await checkConsensus(meal, day);
+    updateDay();
+  });
 
-  if (startSelectionBtn) {
-    startSelectionBtn.addEventListener("click", async () => {
-      await syncCurrentDayFromDB();
-      if (mainMenu) mainMenu.style.display = "none";
-      if (mealSelection) mealSelection.style.display = "block";
-      updateDay();
-    });
-  }
+  noBtn.addEventListener("click", updateDay);
 
-  if (yesBtn) {
-    yesBtn.addEventListener("click", async () => {
+  resetWeekBtn.addEventListener("click", async () => {
 
-      const meal = mealName.textContent;
-      const day = days[currentDay];
+    const weekSnap = await getDocs(collection(db, "week"));
+    for (const d of weekSnap.docs) await deleteDoc(d.ref);
 
-      await addDoc(collection(db, "preferences"), {
-        user: currentUser,
-        day,
-        meal
-      });
+    const prefSnap = await getDocs(collection(db, "preferences"));
+    for (const d of prefSnap.docs) await deleteDoc(d.ref);
 
-      await checkConsensus(meal, day);
-      updateDay();
-    });
-  }
+    currentDay = 0;
+    await saveCurrentDay();
 
-  if (noBtn) {
-    noBtn.addEventListener("click", () => {
-      updateDay();
-    });
-  }
+    alert("Semana resetada!");
+    showMainMenu();
+  });
 
-  if (resetWeekBtn) {
-    resetWeekBtn.addEventListener("click", async () => {
-
-      if (!confirm("Tens a certeza que queres resetar a semana?")) return;
-
-      const weekSnapshot = await getDocs(collection(db, "week"));
-      for (const docSnap of weekSnapshot.docs) {
-        await deleteDoc(docSnap.ref);
-      }
-
-      const prefsSnapshot = await getDocs(collection(db, "preferences"));
-      for (const docSnap of prefsSnapshot.docs) {
-        await deleteDoc(docSnap.ref);
-      }
-
-      currentDay = 0;
-      await saveCurrentDayToDB();
-
-      alert("Semana resetada com sucesso!");
-      showMainMenu();
-    });
-  }
-
-}
+});
