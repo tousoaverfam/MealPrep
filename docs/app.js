@@ -14,7 +14,7 @@ import {
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // 🔥 FIREBASE CONFIG (mete as tuas chaves reais)
+  // FIREBASE CONFIG
   const firebaseConfig = {
     apiKey: "API_KEY",
     authDomain: "AUTH_DOMAIN",
@@ -28,11 +28,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const db = getFirestore(app);
 
   // -----------------------------
-  // ELEMENTOS (IDs reais do teu HTML)
+  // ELEMENTOS
   // -----------------------------
-
   const screens = document.querySelectorAll(".screen");
-
   const userSelectScreen = document.getElementById("user-select");
   const homeScreen = document.getElementById("home");
   const swipeScreen = document.getElementById("swipe");
@@ -40,7 +38,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const selectHugo = document.getElementById("selectHugo");
   const selectLucia = document.getElementById("selectLucia");
-
   const btnEscolher = document.getElementById("btnEscolher");
   const yesBtn = document.getElementById("yesBtn");
   const noBtn = document.getElementById("noBtn");
@@ -48,13 +45,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const mealName = document.getElementById("mealName");
   const currentDayDisplay = document.getElementById("currentDayDisplay");
-
   const userIndicator = document.getElementById("user-indicator");
 
   // -----------------------------
   // ESTADO
   // -----------------------------
-
   let currentUser = null;
   let currentDay = 0;
 
@@ -78,9 +73,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   ];
 
   // -----------------------------
-  // UTIL
+  // UTILIDADES
   // -----------------------------
-
   function showScreen(screen) {
     screens.forEach(s => s.style.display = "none");
     screen.style.display = "block";
@@ -96,10 +90,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function getAvailableMeals(dayName) {
-
+    // Refeições já escolhidas como consenso
     const weekSnap = await getDocs(collection(db, "week"));
     const usedMeals = weekSnap.docs.map(d => d.data().meal);
 
+    // Refeições já marcadas pelo user como "sim" neste dia
     const userSnap = await getDocs(
       query(
         collection(db, "preferences"),
@@ -107,18 +102,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         where("user", "==", currentUser)
       )
     );
-
     const likedMeals = userSnap.docs.map(d => d.data().meal);
 
+    // Apenas refeições disponíveis
     return baseMeals.filter(
-      meal =>
-        !usedMeals.includes(meal) &&
-        !likedMeals.includes(meal)
+      meal => !usedMeals.includes(meal) && !likedMeals.includes(meal)
     );
   }
 
   async function updateMeal() {
-
     if (currentDay >= days.length) {
       alert("Semana concluída!");
       showScreen(homeScreen);
@@ -135,12 +127,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    mealName.textContent =
-      meals[Math.floor(Math.random() * meals.length)];
+    mealName.textContent = meals[Math.floor(Math.random() * meals.length)];
   }
 
   async function checkConsensus(meal, dayName) {
-
     const snap = await getDocs(
       query(
         collection(db, "preferences"),
@@ -149,20 +139,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       )
     );
 
+    // Se ambos users disseram "sim", define como consenso
     if (snap.size >= 2) {
+      await addDoc(collection(db, "week"), { day: dayName, meal });
 
-      await addDoc(collection(db, "week"), {
-        day: dayName,
-        meal
-      });
-
+      // Limpa todas preferências do dia
       const dayPrefs = await getDocs(
         query(collection(db, "preferences"), where("day", "==", dayName))
       );
-
-      for (const d of dayPrefs.docs) {
-        await deleteDoc(d.ref);
-      }
+      for (const d of dayPrefs.docs) await deleteDoc(d.ref);
 
       currentDay++;
       await saveCurrentDay();
@@ -172,7 +157,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   // EVENTOS
   // -----------------------------
-
   selectHugo.addEventListener("click", () => {
     currentUser = "Hugo";
     userIndicator.textContent = "Utilizador: Hugo";
@@ -192,7 +176,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   yesBtn.addEventListener("click", async () => {
-
     const meal = mealName.textContent;
     const dayName = days[currentDay];
 
@@ -209,9 +192,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   noBtn.addEventListener("click", updateMeal);
 
   resetWeekBtn.addEventListener("click", async () => {
-
     if (!confirm("Resetar semana?")) return;
 
+    // Limpa semana e preferências
     const weekSnap = await getDocs(collection(db, "week"));
     for (const d of weekSnap.docs) await deleteDoc(d.ref);
 
@@ -228,7 +211,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   // ARRANQUE
   // -----------------------------
-
   showScreen(userSelectScreen);
 
 });
